@@ -19,4 +19,16 @@ void main() {
       isTrue,
     );
   });
+
+  test('flow multiplier grows at deliberate streak thresholds', () {
+    expect(flowMultiplier(0), 1);
+    expect(flowMultiplier(3), 1.5);
+    expect(flowMultiplier(8), 2);
+    expect(flowMultiplier(15), 3);
+  });
+
+  test('near misses reward precision without changing the multiplier', () {
+    expect(cleanPassReward(3, nearMiss: false), 150);
+    expect(cleanPassReward(3, nearMiss: true), 270);
+  });
 }

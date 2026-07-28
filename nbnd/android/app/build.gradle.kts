@@ -30,8 +30,18 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            // R8 can obfuscate AndroidX WorkManager/Room internals pulled by Ads.
+            // Keep release startup stable while preserving Android 21 support.
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
+}
+
+dependencies {
+    // play-services-ads-lite 23.6.0 pulls WorkManager 2.7.0, which can crash
+    // during AndroidX Startup on current Android/AGP release builds.
+    implementation("androidx.work:work-runtime:2.9.1")
 }
 
 kotlin {

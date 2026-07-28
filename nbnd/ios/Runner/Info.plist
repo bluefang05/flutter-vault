@@ -16,6 +16,8 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>nbnd</string>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3322493998376707~7734498244</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

@@ -47,14 +47,17 @@ class NbndGame extends FlameGame {
   double _hitFlashUntil = 0;
   double _shakeUntil = 0;
   double _shakeStrength = 0;
+  double _pressureReliefUntil = 0;
   int _sequenceIndex = 0;
+  int _cleanPasses = 0;
+  int _scoreBonus = 0;
   late int _spoonHalves;
   bool _gameOverSent = false;
 
   double get _playerRadius => math.min(size.x, size.y) * .19;
   double get _playerHalfAngle => .24;
   double get _outerSpawnRadius => math.max(size.x, size.y) * .68;
-  int get score => (_elapsed * 100).floor();
+  int get score => (_elapsed * 100).floor() + _scoreBonus;
   bool get canActivateAbility =>
       _state == GameRunState.running && _abilityCooldownRemaining <= 0;
 
@@ -80,7 +83,10 @@ class NbndGame extends FlameGame {
     _hitFlashUntil = 0;
     _shakeUntil = 0;
     _shakeStrength = 0;
+    _pressureReliefUntil = 0;
     _sequenceIndex = 0;
+    _cleanPasses = 0;
+    _scoreBonus = 0;
     _spoonHalves = profile.maxSpoonHalves;
     _gameOverSent = false;
     _emitHud(force: true);
@@ -147,9 +153,9 @@ class NbndGame extends FlameGame {
           final ObstacleRing nearest = candidates.reduce(
             (ObstacleRing a, ObstacleRing b) =>
                 (a.radius - _playerRadius).abs() <
-                        (b.radius - _playerRadius).abs()
-                    ? a
-                    : b,
+                    (b.radius - _playerRadius).abs()
+                ? a
+                : b,
           );
           nearest.gapCenters[0] = _playerAngle;
           nearest.gapWidth = math.max(nearest.gapWidth, math.pi / 2.7);
@@ -188,10 +194,7 @@ class NbndGame extends FlameGame {
     final double worldDt = gameDt * worldScale;
 
     _elapsed += gameDt;
-    _abilityCooldownRemaining = math.max(
-      0,
-      _abilityCooldownRemaining - gameDt,
-    );
+    _abilityCooldownRemaining = math.max(0, _abilityCooldownRemaining - gameDt);
     _playerAngle = normalizeAngle(
       _playerAngle + _moveDirection * profile.playerSpeed * gameDt,
     );
@@ -217,11 +220,21 @@ class NbndGame extends FlameGame {
 
   double get _difficulty {
     final double raw = 1 + (_elapsed / 32);
-    return settings.practiceMode ? raw * .78 : raw;
+    final double practice = settings.practiceMode ? .78 : 1;
+    final double recovery = _elapsed < _pressureReliefUntil ? .84 : 1;
+    return raw * practice * recovery;
   }
 
   double get _spawnInterval {
-    return math.max(.52, 1.38 - (_elapsed * .008));
+    final double base = math.max(.52, 1.38 - (_elapsed * .008));
+    return _isBreathing ? base * 1.65 : base;
+  }
+
+  // A short low-pressure window lets attention reset without stopping play.
+  bool get _isBreathing {
+    if (_elapsed < 12) return false;
+    final double cycle = _elapsed % 20;
+    return cycle >= 16 && cycle < 19;
   }
 
   String get _stage {
@@ -283,12 +296,14 @@ class NbndGame extends FlameGame {
     final double playerOuter = _playerRadius + 12;
     final double ringInner = ring.radius - ring.thickness / 2;
     final double ringOuter = ring.radius + ring.thickness / 2;
-    final bool radialOverlap = ringOuter >= playerInner && ringInner <= playerOuter;
+    final bool radialOverlap =
+        ringOuter >= playerInner && ringInner <= playerOuter;
     if (!radialOverlap) {
       return;
     }
 
-    final bool crossed = ring.previousRadius >= playerInner && ring.radius <= playerOuter;
+    final bool crossed =
+        ring.previousRadius >= playerInner && ring.radius <= playerOuter;
     if (!crossed) {
       return;
     }
@@ -296,11 +311,14 @@ class NbndGame extends FlameGame {
     ring.checkedCollision = true;
 
     if (_elapsed < _invulnerableUntil) {
+      _registerCleanPass(nearMiss: false);
       return;
     }
 
-    final double effectiveGapWidth =
-        math.max(0, ring.gapWidth - _playerHalfAngle * 2);
+    final double effectiveGapWidth = math.max(
+      0,
+      ring.gapWidth - _playerHalfAngle * 2,
+    );
     final bool safe = ring.gapCenters.any((double gap) {
       return angularDistance(_playerAngle, gap) <= effectiveGapWidth / 2;
     });
@@ -308,14 +326,15 @@ class NbndGame extends FlameGame {
       final double nearestEdgeDistance = ring.gapCenters
           .map(
             (double gap) =>
-                ((effectiveGapWidth / 2) -
-                        angularDistance(_playerAngle, gap))
+                ((effectiveGapWidth / 2) - angularDistance(_playerAngle, gap))
                     .abs(),
           )
           .fold<double>(double.infinity, math.min);
       if (nearestEdgeDistance < .12) {
         _resonance = math.min(1, _resonance + .22);
       }
+      final bool nearMiss = nearestEdgeDistance < .12;
+      _registerCleanPass(nearMiss: nearMiss);
       return;
     }
 
@@ -344,8 +363,10 @@ class NbndGame extends FlameGame {
   }
 
   bool _isStrongHit(ObstacleRing ring) {
-    final double effectiveGapWidth =
-        math.max(0, ring.gapWidth - _playerHalfAngle * 2);
+    final double effectiveGapWidth = math.max(
+      0,
+      ring.gapWidth - _playerHalfAngle * 2,
+    );
     final double nearestDistance = ring.gapCenters
         .map((double gap) => angularDistance(_playerAngle, gap))
         .fold<double>(double.infinity, math.min);
@@ -354,16 +375,31 @@ class NbndGame extends FlameGame {
 
   void _applyHitDamage(int halves) {
     _spoonHalves = math.max(0, _spoonHalves - halves);
+    _cleanPasses = 0;
+    _pressureReliefUntil = _elapsed + 4;
     _invulnerableUntil = _elapsed + .55;
     _moveDirection = 0;
     _emitHud(force: true);
   }
 
   void _triggerHitFeedback(bool strongHit) {
-    _hitFlashUntil = _elapsed + .22;
+    if (!settings.reducedFlashes) {
+      _hitFlashUntil = _elapsed + .22;
+    }
     _shakeUntil = _elapsed + (strongHit ? .38 : .26);
     _shakeStrength = strongHit ? 8 : 5;
-    HapticFeedback.mediumImpact();
+    if (settings.haptics) {
+      HapticFeedback.mediumImpact();
+    }
+  }
+
+  void _registerCleanPass({required bool nearMiss}) {
+    _cleanPasses += 1;
+    _scoreBonus += cleanPassReward(_cleanPasses, nearMiss: nearMiss);
+    if (nearMiss && settings.haptics) {
+      HapticFeedback.selectionClick();
+    }
+    _emitHud(force: true);
   }
 
   void _markResolved(ObstacleRing ring) {
@@ -427,6 +463,9 @@ class NbndGame extends FlameGame {
         resonance: _resonance,
         spoonHalves: _spoonHalves,
         maxSpoonHalves: profile.maxSpoonHalves,
+        cleanPasses: _cleanPasses,
+        flowMultiplier: flowMultiplier(_cleanPasses),
+        breathing: _isBreathing,
         state: _state,
       ),
     );
@@ -462,7 +501,8 @@ class NbndGame extends FlameGame {
       final double flashT = ((_hitFlashUntil - _elapsed) / .22).clamp(0.0, 1.0);
       canvas.drawRect(
         fullRect,
-        Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: flashT * .10),
+        Paint()
+          ..color = const Color(0xFFFFFFFF).withValues(alpha: flashT * .10),
       );
     }
     canvas.restore();
@@ -499,40 +539,70 @@ class NbndGame extends FlameGame {
   }
 
   void _drawCore(Canvas canvas, Offset center) {
-    final int sides = _stage == 'FRACTURA' ? 8 : 6;
-    final double rotation = _elapsed * .22;
     final double radius = _playerRadius * .45;
-    final Path path = Path();
-    for (int index = 0; index < sides; index++) {
-      final double angle = rotation + index * math.pi * 2 / sides;
-      final Offset point = center + Offset(math.cos(angle), math.sin(angle)) * radius;
-      if (index == 0) {
-        path.moveTo(point.dx, point.dy);
-      } else {
-        path.lineTo(point.dx, point.dy);
-      }
-    }
-    path.close();
-    canvas.drawPath(
-      path,
-      Paint()..color = neuroType.color.withValues(alpha: .28),
-    );
-    canvas.drawPath(
-      path,
+    final double charge = profile.cooldown == 0
+        ? 1
+        : 1 - (_abilityCooldownRemaining / profile.cooldown).clamp(0.0, 1.0);
+    final Paint fill = Paint()
+      ..shader = RadialGradient(
+        colors: <Color>[
+          neuroType.color.withValues(alpha: .42),
+          neuroType.color.withValues(alpha: .10),
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
+    canvas.drawCircle(center, radius, fill);
+    canvas.drawCircle(
+      center,
+      radius,
       Paint()
         ..color = neuroType.color
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.5,
     );
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius + 7),
+      -math.pi / 2,
+      math.pi * 2 * charge,
+      false,
+      Paint()
+        ..color = charge >= 1 ? const Color(0xFFFFFFFF) : neuroType.color
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = 4,
+    );
+    canvas.drawCircle(
+      center,
+      radius * .42,
+      Paint()
+        ..color = const Color(
+          0xFFFFFFFF,
+        ).withValues(alpha: charge >= 1 ? .9 : .3)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5,
+    );
+    canvas.drawLine(
+      center.translate(0, -radius * .18),
+      center.translate(0, radius * .22),
+      Paint()
+        ..color = const Color(
+          0xFFFFFFFF,
+        ).withValues(alpha: charge >= 1 ? .95 : .42)
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = 5,
+    );
   }
 
   void _drawPreview(Canvas canvas, Offset center) {
     if (neuroType != NeuroType.tea && neuroType != NeuroType.tag) return;
-    final ObstacleRing? previewRing = _rings.where((ObstacleRing ring) => ring.radius > _playerRadius).firstOrNull;
+    final ObstacleRing? previewRing = _rings
+        .where((ObstacleRing ring) => ring.radius > _playerRadius)
+        .firstOrNull;
     if (previewRing == null) return;
     final double gap = previewRing.gapCenters.first;
     final Paint paint = Paint()
-      ..color = neuroType.color.withValues(alpha: neuroType == NeuroType.tag ? .28 : .55)
+      ..color = neuroType.color.withValues(
+        alpha: neuroType == NeuroType.tag ? .28 : .55,
+      )
       ..strokeWidth = neuroType == NeuroType.tag ? 2 : 3;
     canvas.drawLine(
       center + Offset(math.cos(gap), math.sin(gap)) * (_playerRadius * .55),
@@ -560,47 +630,44 @@ class NbndGame extends FlameGame {
 
   Color _ringColor(ObstacleRing ring) {
     final double distance = (ring.radius - _playerRadius).abs();
-    final double proximity =
-        (1 - distance / 240).clamp(0.0, 1.0).toDouble();
+    final double proximity = (1 - distance / 240).clamp(0.0, 1.0).toDouble();
     final double alpha = settings.reducedFlashes ? .72 : .55 + proximity * .4;
     if (_stage == 'FRACTURA') {
-      return Color.lerp(neuroType.color, const Color(0xFFFF5F7A), .35)!
-          .withValues(alpha: alpha);
+      return Color.lerp(
+        neuroType.color,
+        const Color(0xFFFF5F7A),
+        .35,
+      )!.withValues(alpha: alpha);
     }
     return neuroType.color.withValues(alpha: alpha);
   }
 
   void _drawPlayer(Canvas canvas, Offset center) {
-    final Offset position = center +
+    final Offset position =
+        center +
         Offset(math.cos(_playerAngle), math.sin(_playerAngle)) * _playerRadius;
-    final double heading = _playerAngle + math.pi / 2;
-    final Path triangle = Path();
-    for (int index = 0; index < 3; index++) {
-      final double angle = heading + index * math.pi * 2 / 3;
-      final Offset point = position + Offset(math.cos(angle), math.sin(angle)) * 10;
-      if (index == 0) {
-        triangle.moveTo(point.dx, point.dy);
-      } else {
-        triangle.lineTo(point.dx, point.dy);
-      }
-    }
-    triangle.close();
     final bool invulnerable = _elapsed < _invulnerableUntil;
     final bool flashing = _elapsed < _hitFlashUntil;
+    final Color playerColor = flashing
+        ? const Color(0xFFFFFFFF)
+        : const Color(0xFFB58CFF);
     canvas.drawCircle(
       position,
       invulnerable ? 17 : 13,
-      Paint()
-        ..color = (flashing ? const Color(0xFFFFFFFF) : neuroType.color)
-            .withValues(alpha: invulnerable ? .26 : .18),
+      Paint()..color = playerColor.withValues(alpha: invulnerable ? .25 : .10),
     );
-    canvas.drawPath(triangle, Paint()..color = const Color(0xFFFFFFFF));
-    canvas.drawPath(
-      triangle,
+    canvas.drawCircle(
+      position,
+      11,
       Paint()
-        ..color = neuroType.color
+        ..color = playerColor
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
+        ..strokeWidth = 3,
+    );
+    canvas.drawCircle(
+      position,
+      3.5,
+      Paint()..color = playerColor.withValues(alpha: .65),
     );
   }
 }

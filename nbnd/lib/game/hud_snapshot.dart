@@ -9,6 +9,9 @@ class HudSnapshot {
     required this.resonance,
     required this.spoonHalves,
     required this.maxSpoonHalves,
+    required this.cleanPasses,
+    required this.flowMultiplier,
+    required this.breathing,
     required this.state,
   });
 
@@ -19,5 +22,8 @@ class HudSnapshot {
   final double resonance;
   final int spoonHalves;
   final int maxSpoonHalves;
+  final int cleanPasses;
+  final double flowMultiplier;
+  final bool breathing;
   final GameRunState state;
 }

@@ -7,7 +7,7 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const NbndApp());
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('NBND'), findsWidgets);
   });

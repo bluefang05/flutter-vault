@@ -12,7 +12,12 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flame: ^1.35.1
+  google_mobile_ads:
+    path: third_party/google_mobile_ads
   path_provider: ^2.1.6
+  # Newer WebView Android releases require API 24.
+  webview_flutter: 4.10.0
+  webview_flutter_android: 4.10.1
 
 dev_dependencies:
   flutter_test:

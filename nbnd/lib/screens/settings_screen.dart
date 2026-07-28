@@ -41,7 +41,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               setState(() => _settings = _settings.copyWith(haptics: value));
             },
             title: Text(t.vibration),
-            subtitle: const Text('Respuesta táctil al activar poderes o perder.'),
+            subtitle: const Text(
+              'Respuesta táctil al activar poderes o perder.',
+            ),
           ),
           SwitchListTile.adaptive(
             value: _settings.reducedFlashes,
@@ -61,7 +63,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
             title: Text(t.practiceMode),
-            subtitle: const Text('Reduce la velocidad general aproximadamente un 28 %.'),
+            subtitle: const Text(
+              'Reduce la velocidad general aproximadamente un 28 %.',
+            ),
           ),
           SwitchListTile.adaptive(
             value: _settings.showAdPlaceholder,
@@ -71,7 +75,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
             title: Text(t.showAdSpace),
-            subtitle: const Text('Simula el banner superior hasta integrar AdMob.'),
+            subtitle: const Text('Muestra el banner superior de AdMob.'),
+          ),
+          const SizedBox(height: 12),
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: Text(t.aboutTitle),
+            childrenPadding: const EdgeInsets.only(bottom: 12),
+            children: <Widget>[
+              Align(alignment: Alignment.centerLeft, child: Text(t.aboutBody)),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  t.aboutThanks,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 24),
           FilledButton(onPressed: _save, child: Text(t.save)),

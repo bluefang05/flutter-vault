@@ -10,7 +10,7 @@ import '../models/game_settings.dart';
 import '../models/neuro_type.dart';
 import '../services/app_storage.dart';
 import '../widgets/spoon_life_bar.dart';
-import '../widgets/top_ad_placeholder.dart';
+import '../widgets/top_ad_banner.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({
@@ -28,8 +28,7 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen>
-    with WidgetsBindingObserver {
+class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   final AppStorage _storage = AppStorage.instance;
   late final NbndGame _game;
   late int _bestScore = widget.initialBestScore;
@@ -50,6 +49,9 @@ class _GameScreenState extends State<GameScreen>
       resonance: 0,
       spoonHalves: profile.maxSpoonHalves,
       maxSpoonHalves: profile.maxSpoonHalves,
+      cleanPasses: 0,
+      flowMultiplier: 1,
+      breathing: false,
       state: GameRunState.ready,
     );
     _game = NbndGame(
@@ -94,6 +96,18 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _handlePointerDown(PointerDownEvent event, BoxConstraints constraints) {
+    final Offset center = Offset(
+      constraints.maxWidth / 2,
+      constraints.maxHeight / 2,
+    );
+    final double activationRadius = (constraints.biggest.shortestSide * .13)
+        .clamp(58.0, 92.0)
+        .toDouble();
+    if ((event.localPosition - center).distance <= activationRadius) {
+      _game.stopMoving();
+      _activateAbility();
+      return;
+    }
     final double direction = event.localPosition.dx < constraints.maxWidth / 2
         ? -1
         : 1;
@@ -112,7 +126,7 @@ class _GameScreenState extends State<GameScreen>
       child: Scaffold(
         body: Column(
           children: <Widget>[
-            TopAdPlaceholder(visible: widget.settings.showAdPlaceholder),
+            TopAdBanner(visible: widget.settings.showAdPlaceholder),
             Expanded(
               child: LayoutBuilder(
                 builder: (BuildContext context, BoxConstraints constraints) {
@@ -132,15 +146,6 @@ class _GameScreenState extends State<GameScreen>
                         neuroType: widget.neuroType,
                         bestScore: _bestScore,
                         onPause: _game.pauseGame,
-                      ),
-                      Align(
-                        alignment: const Alignment(0, .84),
-                        child: _PowerButton(
-                          neuroType: widget.neuroType,
-                          charge: _hud.abilityCharge,
-                          enabled: _game.canActivateAbility,
-                          onPressed: _activateAbility,
-                        ),
                       ),
                       if (_hud.state == GameRunState.ready)
                         _MessageOverlay(
@@ -213,13 +218,32 @@ class _Hud extends StatelessWidget {
                       children: <Widget>[
                         Text(
                           '${neuroType.code} · ${neuroType.powerName}',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: neuroType.color,
-                              ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: neuroType.color),
                         ),
                         Text(
                           t.stageLabel(hud.stage, hud.seconds),
                           style: Theme.of(context).textTheme.labelMedium,
+                        ),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 180),
+                          child: Text(
+                            hud.breathing
+                                ? t.breathingMoment
+                                : t.flowLine(
+                                    hud.cleanPasses,
+                                    hud.flowMultiplier,
+                                  ),
+                            key: ValueKey<String>(
+                              '${hud.breathing}-${hud.cleanPasses}',
+                            ),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: hud.breathing
+                                      ? Colors.white70
+                                      : neuroType.color,
+                                ),
+                          ),
                         ),
                       ],
                     ),
@@ -251,52 +275,6 @@ class _Hud extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PowerButton extends StatelessWidget {
-  const _PowerButton({
-    required this.neuroType,
-    required this.charge,
-    required this.enabled,
-    required this.onPressed,
-  });
-
-  final NeuroType neuroType;
-  final double charge;
-  final bool enabled;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Activar poder ${neuroType.powerName}',
-      child: SizedBox.square(
-        dimension: 72,
-        child: Stack(
-          fit: StackFit.expand,
-          children: <Widget>[
-            CircularProgressIndicator(
-              value: charge.clamp(0.0, 1.0).toDouble(),
-              strokeWidth: 5,
-              backgroundColor: Colors.white12,
-              color: neuroType.color,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: IconButton.filled(
-                onPressed: enabled ? onPressed : null,
-                style: IconButton.styleFrom(
-                  backgroundColor: neuroType.color.withValues(alpha: .28),
-                ),
-                icon: const Icon(Icons.bolt_rounded),
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -338,7 +316,8 @@ class _MessageOverlay extends StatelessWidget {
                   Text(message, textAlign: TextAlign.center),
                   const SizedBox(height: 20),
                   FilledButton(onPressed: onPressed, child: Text(action)),
-                  if (secondaryAction != null && onSecondaryPressed != null) ...<Widget>[
+                  if (secondaryAction != null &&
+                      onSecondaryPressed != null) ...<Widget>[
                     const SizedBox(height: 10),
                     TextButton(
                       onPressed: onSecondaryPressed,
