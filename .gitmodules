@@ -1,0 +1,36 @@
+[submodule "Biblia Catolica 73"]
+	path = Biblia Catolica 73
+	url = https://github.com/bluefang05/biblia-catolica-73.git
+
+[submodule "deapoco"]
+	path = deapoco
+	url = https://github.com/bluefang05/deapoco.git
+
+[submodule "hocicos"]
+	path = hocicos
+	url = https://github.com/bluefang05/hocicos.git
+
+[submodule "inhala"]
+	path = inhala
+	url = https://github.com/bluefang05/inhala.git
+
+[submodule "mesenti"]
+	path = mesenti
+	url = https://github.com/bluefang05/mesenti.git
+
+[submodule "sefeliz"]
+	path = sefeliz
+	url = https://github.com/bluefang05/sefeliz.git
+
+[submodule "siyase"]
+	path = siyase
+	url = https://github.com/bluefang05/siyase.git
+
+[submodule "soysomos"]
+	path = soysomos
+	url = https://github.com/bluefang05/soysomos.git
+
+[submodule "teleo"]
+	path = teleo
+	url = https://github.com/bluefang05/teleo.git
+
