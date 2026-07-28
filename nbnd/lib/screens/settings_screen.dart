@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/game_settings.dart';
 import '../l10n/app_localizations.dart';
 import '../services/app_storage.dart';
+import 'profile_info_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key, required this.settings});
@@ -41,9 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               setState(() => _settings = _settings.copyWith(haptics: value));
             },
             title: Text(t.vibration),
-            subtitle: const Text(
-              'Respuesta táctil al activar poderes o perder.',
-            ),
+            subtitle: Text(t.hapticsDescription),
           ),
           SwitchListTile.adaptive(
             value: _settings.reducedFlashes,
@@ -53,7 +52,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
             title: Text(t.reducedFlashes),
-            subtitle: const Text('Suaviza cambios de intensidad y proximidad.'),
+            subtitle: Text(t.reducedFlashesDescription),
           ),
           SwitchListTile.adaptive(
             value: _settings.practiceMode,
@@ -63,9 +62,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
             title: Text(t.practiceMode),
-            subtitle: const Text(
-              'Reduce la velocidad general aproximadamente un 28 %.',
-            ),
+            subtitle: Text(t.practiceModeDescription),
           ),
           SwitchListTile.adaptive(
             value: _settings.showAdPlaceholder,
@@ -75,7 +72,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
             title: Text(t.showAdSpace),
-            subtitle: const Text('Muestra el banner superior de AdMob.'),
+            subtitle: Text(t.adSpaceDescription),
           ),
           const SizedBox(height: 12),
           ExpansionTile(
@@ -92,6 +89,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push<void>(
+                      MaterialPageRoute<void>(
+                        builder: (BuildContext context) =>
+                            const ProfileInfoScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.info_outline_rounded),
+                  label: Text(t.learnProfiles),
                 ),
               ),
             ],

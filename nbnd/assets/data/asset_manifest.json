@@ -2,11 +2,25 @@
   "character_placeholder": "assets/images/character_placeholder.png",
   "icon_placeholder": "assets/images/icon_placeholder.png",
   "icon_nbnd": "assets/images/icon_nbnd.png",
+  "profiles": {
+    "tdah": "assets/images/profiles/tdah.png",
+    "tea": "assets/images/profiles/tea.png",
+    "tlp": "assets/images/profiles/tlp.png",
+    "tid": "assets/images/profiles/tid.png",
+    "toc": "assets/images/profiles/toc.png",
+    "alexitimia": "assets/images/profiles/alexitimia.png",
+    "anhedonia": "assets/images/profiles/anhedonia.png",
+    "tag": "assets/images/profiles/tag.png"
+  },
   "spoon_life": {
     "full": "assets/images/spoons/spoon_full.png",
     "half": "assets/images/spoons/spoon_half.png",
     "empty": "assets/images/spoons/spoon_empty.png",
     "optional_panel": "assets/images/spoons/spoon_panel.png"
+  },
+  "spoon_orb": {
+    "source": "code_generated",
+    "description": "Orbe dorado pulsante renderizado por Canvas para respetar el estilo geometrico y el ajuste de destellos."
   },
   "audio": {
     "pulse": "assets/audio/pulse.wav",

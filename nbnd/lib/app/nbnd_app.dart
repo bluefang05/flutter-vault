@@ -12,7 +12,9 @@ class NbndApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final Locale platformLocale =
         WidgetsBinding.instance.platformDispatcher.locale;
-    final Locale effectiveLocale = AppLocalizations.resolveLocale(platformLocale);
+    final Locale effectiveLocale = AppLocalizations.resolveLocale(
+      platformLocale,
+    );
     return MaterialApp(
       locale: effectiveLocale,
       supportedLocales: AppLocalizations.supportedLocales,

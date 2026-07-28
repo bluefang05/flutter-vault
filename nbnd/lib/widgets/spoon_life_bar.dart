@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
+
 enum SpoonFillState { full, half, empty }
 
 SpoonFillState spoonFillStateForIndex({
@@ -36,7 +38,9 @@ class SpoonLifeBar extends StatelessWidget {
     final int safeCurrent = currentHalves.clamp(0, maxHalves).toInt();
 
     return Semantics(
-      label: 'Reserva: $safeCurrent de $maxHalves medias cucharas',
+      label: AppLocalizations.of(
+        context,
+      ).reserveSemantics(safeCurrent, maxHalves),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: const Color(0xD9141727),
@@ -53,7 +57,9 @@ class SpoonLifeBar extends StatelessWidget {
                 currentHalves: safeCurrent,
               );
               return Padding(
-                padding: EdgeInsets.only(right: index == spoonCount - 1 ? 0 : 2),
+                padding: EdgeInsets.only(
+                  right: index == spoonCount - 1 ? 0 : 2,
+                ),
                 child: Image.asset(
                   _assetFor(state),
                   width: 20,

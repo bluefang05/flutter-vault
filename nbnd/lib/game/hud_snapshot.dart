@@ -12,6 +12,7 @@ class HudSnapshot {
     required this.cleanPasses,
     required this.flowMultiplier,
     required this.breathing,
+    required this.recovering,
     required this.state,
   });
 
@@ -25,5 +26,6 @@ class HudSnapshot {
   final int cleanPasses;
   final double flowMultiplier;
   final bool breathing;
+  final bool recovering;
   final GameRunState state;
 }

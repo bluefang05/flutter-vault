@@ -43,16 +43,20 @@ class AppStorage {
     Future<void> Function(Map<String, Object?> data) mutate,
   ) {
     final Completer<void> completer = Completer<void>();
-    _writeQueue = _writeQueue.then((_) async {
-      final Map<String, Object?> data = Map<String, Object?>.from(await _load());
-      await mutate(data);
-      await _save(data);
-    }).then(
-      (_) => completer.complete(),
-      onError: (Object error, StackTrace stackTrace) {
-        completer.completeError(error, stackTrace);
-      },
-    );
+    _writeQueue = _writeQueue
+        .then((_) async {
+          final Map<String, Object?> data = Map<String, Object?>.from(
+            await _load(),
+          );
+          await mutate(data);
+          await _save(data);
+        })
+        .then(
+          (_) => completer.complete(),
+          onError: (Object error, StackTrace stackTrace) {
+            completer.completeError(error, stackTrace);
+          },
+        );
     return completer.future;
   }
 

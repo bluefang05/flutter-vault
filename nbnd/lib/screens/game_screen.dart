@@ -4,12 +4,14 @@ import 'package:flutter/services.dart';
 
 import '../game/hud_snapshot.dart';
 import '../game/nbnd_game.dart';
+import '../game/controls/movement_pointer_tracker.dart';
 import '../game/powers/neuro_power_profile.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_settings.dart';
 import '../models/neuro_type.dart';
 import '../services/app_storage.dart';
 import '../widgets/spoon_life_bar.dart';
+import '../widgets/control_hint_overlay.dart';
 import '../widgets/top_ad_banner.dart';
 
 class GameScreen extends StatefulWidget {
@@ -33,6 +35,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   late final NbndGame _game;
   late int _bestScore = widget.initialBestScore;
   late HudSnapshot _hud;
+  final MovementPointerTracker _pointerTracker = MovementPointerTracker();
+  bool _showControlHint = true;
 
   @override
   void initState() {
@@ -44,7 +48,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     _hud = HudSnapshot(
       seconds: 0,
       score: 0,
-      stage: 'PULSO',
+      stage: 'pulse',
       abilityCharge: 1,
       resonance: 0,
       spoonHalves: profile.maxSpoonHalves,
@@ -52,6 +56,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       cleanPasses: 0,
       flowMultiplier: 1,
       breathing: false,
+      recovering: false,
       state: GameRunState.ready,
     );
     _game = NbndGame(
@@ -67,6 +72,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _pointerTracker.clear();
     super.dispose();
   }
 
@@ -74,6 +80,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
+      _pointerTracker.clear();
+      _game.stopMoving();
       _game.pauseGame();
     }
   }
@@ -89,10 +97,16 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _activateAbility() async {
-    if (_game.canActivateAbility && widget.settings.haptics) {
+    final bool activated = _game.activateAbility();
+    if (activated && widget.settings.haptics) {
       await HapticFeedback.mediumImpact();
     }
-    _game.activateAbility();
+  }
+
+  void _pauseGame() {
+    _pointerTracker.clear();
+    _game.stopMoving();
+    _game.pauseGame();
   }
 
   void _handlePointerDown(PointerDownEvent event, BoxConstraints constraints) {
@@ -104,14 +118,31 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         .clamp(58.0, 92.0)
         .toDouble();
     if ((event.localPosition - center).distance <= activationRadius) {
-      _game.stopMoving();
-      _activateAbility();
+      _pointerTracker.press(event.pointer, ControlPointerZone.power);
+      if (_hud.state != GameRunState.ready) {
+        _activateAbility();
+      }
       return;
     }
-    final double direction = event.localPosition.dx < constraints.maxWidth / 2
-        ? -1
-        : 1;
-    _game.setMoveDirection(direction);
+    final ControlPointerZone zone =
+        event.localPosition.dx < constraints.maxWidth / 2
+        ? ControlPointerZone.counterClockwise
+        : ControlPointerZone.clockwise;
+    _pointerTracker.press(event.pointer, zone);
+    if (_showControlHint) {
+      setState(() => _showControlHint = false);
+    }
+    _game.setMoveDirection(_pointerTracker.movementDirection);
+  }
+
+  void _handlePointerEnd(int pointerId) {
+    _pointerTracker.release(pointerId);
+    final double direction = _pointerTracker.movementDirection;
+    if (direction == 0) {
+      _game.stopMoving();
+    } else {
+      _game.setMoveDirection(direction);
+    }
   }
 
   @override
@@ -137,23 +168,36 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                         behavior: HitTestBehavior.opaque,
                         onPointerDown: (PointerDownEvent event) =>
                             _handlePointerDown(event, constraints),
-                        onPointerUp: (_) => _game.stopMoving(),
-                        onPointerCancel: (_) => _game.stopMoving(),
+                        onPointerUp: (PointerUpEvent event) =>
+                            _handlePointerEnd(event.pointer),
+                        onPointerCancel: (PointerCancelEvent event) =>
+                            _handlePointerEnd(event.pointer),
                         child: GameWidget<NbndGame>(game: _game),
+                      ),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 260),
+                        child: _showControlHint
+                            ? ControlHintOverlay(
+                                key: const ValueKey<String>('control-hint'),
+                                counterClockwise: t.counterClockwise,
+                                clockwise: t.clockwise,
+                                touchAndHold: t.touchAndHold,
+                                centerRadius:
+                                    (constraints.biggest.shortestSide * .13)
+                                        .clamp(58.0, 92.0)
+                                        .toDouble(),
+                                reducedFlashes: widget.settings.reducedFlashes,
+                              )
+                            : const SizedBox.shrink(
+                                key: ValueKey<String>('control-hint-hidden'),
+                              ),
                       ),
                       _Hud(
                         hud: _hud,
                         neuroType: widget.neuroType,
                         bestScore: _bestScore,
-                        onPause: _game.pauseGame,
+                        onPause: _pauseGame,
                       ),
-                      if (_hud.state == GameRunState.ready)
-                        _MessageOverlay(
-                          title: widget.neuroType.powerName,
-                          message: t.startPrompt,
-                          action: t.startPrompt,
-                          onPressed: _game.start,
-                        ),
                       if (_hud.state == GameRunState.paused)
                         _MessageOverlay(
                           title: t.pauseTitle,
@@ -217,7 +261,7 @@ class _Hud extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          '${neuroType.code} · ${neuroType.powerName}',
+                          '${neuroType.code} · ${t.powerName(neuroType)}',
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(color: neuroType.color),
                         ),
@@ -228,18 +272,22 @@ class _Hud extends StatelessWidget {
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 180),
                           child: Text(
-                            hud.breathing
+                            hud.recovering
+                                ? t.spoonRecovered
+                                : hud.breathing
                                 ? t.breathingMoment
                                 : t.flowLine(
                                     hud.cleanPasses,
                                     hud.flowMultiplier,
                                   ),
                             key: ValueKey<String>(
-                              '${hud.breathing}-${hud.cleanPasses}',
+                              '${hud.recovering}-${hud.breathing}-${hud.cleanPasses}',
                             ),
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(
-                                  color: hud.breathing
+                                  color: hud.recovering
+                                      ? const Color(0xFFFFD45C)
+                                      : hud.breathing
                                       ? Colors.white70
                                       : neuroType.color,
                                 ),

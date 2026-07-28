@@ -35,10 +35,6 @@ class ObstacleRing {
   }
 
   bool isAngleSafe(double angle) {
-    return angleInsideGap(
-      angle: angle,
-      centers: gapCenters,
-      width: gapWidth,
-    );
+    return angleInsideGap(angle: angle, centers: gapCenters, width: gapWidth);
   }
 }

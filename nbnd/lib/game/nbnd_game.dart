@@ -1,5 +1,7 @@
 import 'dart:collection';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
+
 import 'package:flame/game.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
@@ -8,8 +10,11 @@ import '../models/game_settings.dart';
 import '../models/neuro_type.dart';
 import 'game_math.dart';
 import 'hud_snapshot.dart';
+import 'models/collision_result.dart';
 import 'models/obstacle_ring.dart';
+import 'models/spoon_orb.dart';
 import 'powers/neuro_power_profile.dart';
+import 'rewind_helpers.dart';
 
 class NbndGame extends FlameGame {
   NbndGame({
@@ -19,6 +24,7 @@ class NbndGame extends FlameGame {
     required this.onGameOver,
   }) : profile = NeuroPowerProfile.forType(neuroType) {
     _spoonHalves = profile.maxSpoonHalves;
+    _orbSpawnTimer = _nextOrbDelay;
   }
 
   final NeuroType neuroType;
@@ -29,6 +35,7 @@ class NbndGame extends FlameGame {
 
   final math.Random _random = math.Random();
   final List<ObstacleRing> _rings = <ObstacleRing>[];
+  final List<SpoonOrb> _spoonOrbs = <SpoonOrb>[];
   final Queue<_GameSnapshot> _history = Queue<_GameSnapshot>();
 
   GameRunState _state = GameRunState.ready;
@@ -40,7 +47,9 @@ class NbndGame extends FlameGame {
   double _abilityCooldownRemaining = 0;
   double _slowUntil = 0;
   double _freezeRotationUntil = 0;
-  double _invulnerableUntil = 0;
+  double _powerImmunityUntil = 0;
+  double _damageGraceUntil = 0;
+  double _controlLockedUntil = 0;
   double _resonance = 0;
   double _snapshotTimer = 0;
   double _lastGap = -math.pi / 2;
@@ -48,18 +57,46 @@ class NbndGame extends FlameGame {
   double _shakeUntil = 0;
   double _shakeStrength = 0;
   double _pressureReliefUntil = 0;
+  double _orbRecoveryUntil = 0;
+  double _abilityFeedbackUntil = 0;
+  double _rewindFeedbackUntil = 0;
+  late double _orbSpawnTimer;
   int _sequenceIndex = 0;
   int _cleanPasses = 0;
   int _scoreBonus = 0;
   late int _spoonHalves;
+  ui.Image? _powerIcon;
   bool _gameOverSent = false;
 
   double get _playerRadius => math.min(size.x, size.y) * .19;
   double get _playerHalfAngle => .24;
   double get _outerSpawnRadius => math.max(size.x, size.y) * .68;
+  double get _minimumRingSeparation => math.max(92, _playerRadius * 1.35);
   int get score => (_elapsed * 100).floor() + _scoreBonus;
+  List<ObstacleRing> get _tocCandidates => _rings
+      .where(
+        (ObstacleRing ring) =>
+            !ring.resolved &&
+            ring.radius + ring.thickness / 2 >= _playerRadius - 18,
+      )
+      .toList(growable: false);
+  bool get _abilityHasEffect => abilityHasEffect(
+    neuroType: neuroType,
+    targetCount: neuroType == NeuroType.toc
+        ? _tocCandidates.length
+        : _rings.where((ObstacleRing ring) => !ring.resolved).length,
+    historyCount: _history.length,
+  );
   bool get canActivateAbility =>
-      _state == GameRunState.running && _abilityCooldownRemaining <= 0;
+      _state == GameRunState.running &&
+      _abilityCooldownRemaining <= 0 &&
+      _abilityHasEffect;
+
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    _powerIcon = await images.load(neuroType.flameIconAsset);
+  }
 
   void start() {
     _state = GameRunState.running;
@@ -68,6 +105,7 @@ class NbndGame extends FlameGame {
 
   void restart() {
     _rings.clear();
+    _spoonOrbs.clear();
     _history.clear();
     _state = GameRunState.running;
     _elapsed = 0;
@@ -77,13 +115,19 @@ class NbndGame extends FlameGame {
     _abilityCooldownRemaining = 0;
     _slowUntil = 0;
     _freezeRotationUntil = 0;
-    _invulnerableUntil = 0;
+    _powerImmunityUntil = 0;
+    _damageGraceUntil = 0;
+    _controlLockedUntil = 0;
     _resonance = 0;
     _lastGap = -math.pi / 2;
     _hitFlashUntil = 0;
     _shakeUntil = 0;
     _shakeStrength = 0;
     _pressureReliefUntil = 0;
+    _orbRecoveryUntil = 0;
+    _abilityFeedbackUntil = 0;
+    _rewindFeedbackUntil = 0;
+    _orbSpawnTimer = _nextOrbDelay;
     _sequenceIndex = 0;
     _cleanPasses = 0;
     _scoreBonus = 0;
@@ -119,11 +163,12 @@ class NbndGame extends FlameGame {
     _moveDirection = 0;
   }
 
-  void activateAbility() {
+  bool activateAbility() {
     if (!canActivateAbility) {
-      return;
+      return false;
     }
 
+    bool activated = true;
     switch (neuroType) {
       case NeuroType.tdah:
         _slowUntil = _elapsed + 2.4;
@@ -139,16 +184,10 @@ class NbndGame extends FlameGame {
         break;
       case NeuroType.tid:
         _playerAngle = normalizeAngle(_playerAngle + math.pi);
-        _invulnerableUntil = _elapsed + .65;
+        _powerImmunityUntil = _elapsed + .65;
         break;
       case NeuroType.toc:
-        final List<ObstacleRing> candidates = _rings
-            .where(
-              (ObstacleRing ring) =>
-                  !ring.resolved &&
-                  ring.radius + ring.thickness / 2 >= _playerRadius - 18,
-            )
-            .toList(growable: false);
+        final List<ObstacleRing> candidates = _tocCandidates;
         if (candidates.isNotEmpty) {
           final ObstacleRing nearest = candidates.reduce(
             (ObstacleRing a, ObstacleRing b) =>
@@ -163,21 +202,24 @@ class NbndGame extends FlameGame {
         break;
       case NeuroType.alexitimia:
         _slowUntil = _elapsed + 1.8;
-        _invulnerableUntil = _elapsed + .9;
+        _powerImmunityUntil = _elapsed + .9;
         break;
       case NeuroType.anhedonia:
-        _invulnerableUntil = _elapsed + 3.5;
-        _shakeStrength = 3;
-        _hitFlashUntil = _elapsed + .18;
-        _triggerHitFeedback(false);
+        _powerImmunityUntil = _elapsed + 3.5;
         break;
       case NeuroType.tag:
-        _rewindOneSecond();
+        activated = _rewindOneSecond();
+        if (activated) {
+          _powerImmunityUntil = _elapsed + .35;
+        }
         break;
     }
 
+    if (!activated) return false;
     _abilityCooldownRemaining = profile.cooldown;
+    _abilityFeedbackUntil = _elapsed + .42;
     _emitHud(force: true);
+    return true;
   }
 
   @override
@@ -187,6 +229,19 @@ class NbndGame extends FlameGame {
       return;
     }
 
+    const double maxFrameDt = .25;
+    const double maxStepDt = 1 / 120;
+    final double boundedDt = dt.clamp(0.0, maxFrameDt).toDouble();
+    final int steps = math.max(1, (boundedDt / maxStepDt).ceil());
+    final double stepDt = boundedDt / steps;
+    for (int step = 0; step < steps; step++) {
+      _updateStep(stepDt);
+      if (_state != GameRunState.running) break;
+    }
+    _emitHud();
+  }
+
+  void _updateStep(double dt) {
     final double practiceFactor = settings.practiceMode ? .72 : 1;
     final bool slowed = _elapsed < _slowUntil;
     final double worldScale = slowed ? .42 : 1;
@@ -195,27 +250,57 @@ class NbndGame extends FlameGame {
 
     _elapsed += gameDt;
     _abilityCooldownRemaining = math.max(0, _abilityCooldownRemaining - gameDt);
-    _playerAngle = normalizeAngle(
-      _playerAngle + _moveDirection * profile.playerSpeed * gameDt,
-    );
+    if (_elapsed >= _controlLockedUntil) {
+      _playerAngle = normalizeAngle(
+        _playerAngle + _moveDirection * profile.playerSpeed * gameDt,
+      );
+    }
 
     _spawnTimer -= worldDt;
     if (_spawnTimer <= 0) {
-      _spawnRing();
-      _spawnTimer = _spawnInterval;
+      if (_canSpawnRing) {
+        _spawnRing();
+        _spawnTimer = _spawnInterval;
+      } else {
+        _spawnTimer = .08;
+      }
     }
 
     final bool freezeRotation = _elapsed < _freezeRotationUntil;
+    bool automaticRewindRequested = false;
     for (final ObstacleRing ring in _rings) {
       ring.update(worldDt, freezeRotation: freezeRotation);
-      _checkCollision(ring);
+      if (_checkCollision(ring)) {
+        automaticRewindRequested = true;
+        break;
+      }
       _markResolved(ring);
+    }
+    if (automaticRewindRequested && _rewindOneSecond()) {
+      _abilityCooldownRemaining = profile.cooldown;
+      _powerImmunityUntil = _elapsed + .35;
+      _rewindFeedbackUntil = _elapsed + .55;
+      _emitHud(force: true);
+      return;
     }
     _rings.removeWhere((ObstacleRing ring) => ring.resolved);
 
+    _orbSpawnTimer -= gameDt;
+    if (_orbSpawnTimer <= 0) {
+      _spawnSpoonOrb();
+      _orbSpawnTimer = _nextOrbDelay;
+    }
+    for (final SpoonOrb orb in _spoonOrbs) {
+      orb.update(worldDt);
+      _checkOrbCollection(orb);
+      if (orb.radius < _playerRadius * .35) {
+        orb.resolved = true;
+      }
+    }
+    _spoonOrbs.removeWhere((SpoonOrb orb) => orb.resolved);
+
     _recordHistory(gameDt);
     _hudTimer += gameDt;
-    _emitHud();
   }
 
   double get _difficulty {
@@ -237,10 +322,20 @@ class NbndGame extends FlameGame {
     return cycle >= 16 && cycle < 19;
   }
 
+  double get _nextOrbDelay => 18 + _random.nextDouble() * 10;
+
+  bool get _canSpawnRing => hasMinimumRingSeparation(
+    spawnRadius: _outerSpawnRadius,
+    existingRadii: _rings
+        .where((ObstacleRing ring) => !ring.resolved)
+        .map((ObstacleRing ring) => ring.radius),
+    minimumSeparation: _minimumRingSeparation,
+  );
+
   String get _stage {
-    if (_elapsed < 20) return 'PULSO';
-    if (_elapsed < 45) return 'RESONANCIA';
-    return 'FRACTURA';
+    if (_elapsed < 20) return 'pulse';
+    if (_elapsed < 45) return 'resonance';
+    return 'fracture';
   }
 
   void _spawnRing() {
@@ -288,70 +383,91 @@ class NbndGame extends FlameGame {
     );
   }
 
-  void _checkCollision(ObstacleRing ring) {
-    if (ring.checkedCollision || ring.resolved) {
-      return;
-    }
-    final double playerInner = _playerRadius - 12;
-    final double playerOuter = _playerRadius + 12;
-    final double ringInner = ring.radius - ring.thickness / 2;
-    final double ringOuter = ring.radius + ring.thickness / 2;
-    final bool radialOverlap =
-        ringOuter >= playerInner && ringInner <= playerOuter;
-    if (!radialOverlap) {
-      return;
-    }
+  void _spawnSpoonOrb() {
+    final double direction = _random.nextBool() ? 1 : -1;
+    _spoonOrbs.add(
+      SpoonOrb(
+        radius: _outerSpawnRadius,
+        angle: _random.nextDouble() * math.pi * 2,
+        inwardSpeed: 54 * math.min(_difficulty, 1.65),
+        angularSpeed: direction * (.10 + _random.nextDouble() * .08),
+      ),
+    );
+  }
 
-    final bool crossed =
-        ring.previousRadius >= playerInner && ring.radius <= playerOuter;
-    if (!crossed) {
-      return;
+  void _checkOrbCollection(SpoonOrb orb) {
+    if (orb.resolved) return;
+    final double distance = polarDistance(
+      firstRadius: _playerRadius,
+      firstAngle: _playerAngle,
+      secondRadius: orb.radius,
+      secondAngle: orb.angle,
+    );
+    if (distance > 23) return;
+
+    final int previousHalves = _spoonHalves;
+    _spoonHalves = recoverSpoonHalf(
+      currentHalves: _spoonHalves,
+      maxHalves: profile.maxSpoonHalves,
+    );
+    _scoreBonus += _spoonHalves > previousHalves ? 120 : 40;
+    _orbRecoveryUntil = _elapsed + 1.1;
+    orb.resolved = true;
+    if (settings.haptics) {
+      HapticFeedback.lightImpact();
+    }
+    _emitHud(force: true);
+  }
+
+  bool _checkCollision(ObstacleRing ring) {
+    if (ring.checkedCollision || ring.resolved) {
+      return false;
+    }
+    final RingCollisionAssessment assessment = assessRingCollision(
+      previousRadius: ring.previousRadius,
+      currentRadius: ring.radius,
+      ringThickness: ring.thickness,
+      playerRadius: _playerRadius,
+      playerRadialHalfSize: 12,
+      playerAngle: _playerAngle,
+      playerHalfAngle: _playerHalfAngle,
+      gapCenters: ring.gapCenters,
+      gapWidth: ring.gapWidth,
+    );
+    final RingResolution resolution = resolveRingContact(
+      assessment: assessment,
+      alreadyProcessed: ring.checkedCollision,
+      powerImmune: _elapsed < _powerImmunityUntil,
+      damageGrace: _elapsed < _damageGraceUntil,
+    );
+    if (!resolution.processed) return false;
+
+    final bool damaging =
+        resolution.outcome == RingOutcome.lightHit ||
+        resolution.outcome == RingOutcome.strongHit;
+    if (damaging &&
+        neuroType == NeuroType.tag &&
+        _abilityCooldownRemaining <= 0 &&
+        hasSufficientRewindHistory(_history.length)) {
+      return true;
     }
 
     ring.checkedCollision = true;
-
-    if (_elapsed < _invulnerableUntil) {
-      _registerCleanPass(nearMiss: false);
-      return;
-    }
-
-    final double effectiveGapWidth = math.max(
-      0,
-      ring.gapWidth - _playerHalfAngle * 2,
-    );
-    final bool safe = ring.gapCenters.any((double gap) {
-      return angularDistance(_playerAngle, gap) <= effectiveGapWidth / 2;
-    });
-    if (safe) {
-      final double nearestEdgeDistance = ring.gapCenters
-          .map(
-            (double gap) =>
-                ((effectiveGapWidth / 2) - angularDistance(_playerAngle, gap))
-                    .abs(),
-          )
-          .fold<double>(double.infinity, math.min);
-      if (nearestEdgeDistance < .12) {
+    if (resolution.awardsCleanPass) {
+      if (resolution.nearMiss) {
         _resonance = math.min(1, _resonance + .22);
       }
-      final bool nearMiss = nearestEdgeDistance < .12;
-      _registerCleanPass(nearMiss: nearMiss);
-      return;
+      _registerCleanPass(nearMiss: resolution.nearMiss);
+      if (resolution.outcome == RingOutcome.powerProtected) {
+        _abilityFeedbackUntil = math.max(_abilityFeedbackUntil, _elapsed + .22);
+      }
+      return false;
     }
+    if (!damaging) return false;
 
-    if (neuroType == NeuroType.tag &&
-        _abilityCooldownRemaining <= 0 &&
-        _history.isNotEmpty) {
-      _rewindOneSecond();
-      _abilityCooldownRemaining = profile.cooldown;
-      _invulnerableUntil = _elapsed + .7;
-      _emitHud(force: true);
-      return;
-    }
-
-    final bool strongHit = _isStrongHit(ring);
-    _applyHitDamage(strongHit ? 2 : 1);
-    _triggerHitFeedback(strongHit);
-    if (_spoonHalves > 0) return;
+    _applyHitDamage(resolution.damageHalves);
+    _triggerHitFeedback(resolution.outcome == RingOutcome.strongHit);
+    if (_spoonHalves > 0) return false;
 
     _state = GameRunState.gameOver;
     _moveDirection = 0;
@@ -360,25 +476,18 @@ class NbndGame extends FlameGame {
       _gameOverSent = true;
       onGameOver(score);
     }
-  }
-
-  bool _isStrongHit(ObstacleRing ring) {
-    final double effectiveGapWidth = math.max(
-      0,
-      ring.gapWidth - _playerHalfAngle * 2,
-    );
-    final double nearestDistance = ring.gapCenters
-        .map((double gap) => angularDistance(_playerAngle, gap))
-        .fold<double>(double.infinity, math.min);
-    return nearestDistance > (effectiveGapWidth / 2) - .06;
+    return false;
   }
 
   void _applyHitDamage(int halves) {
-    _spoonHalves = math.max(0, _spoonHalves - halves);
+    _spoonHalves = spoonHalvesAfterDamage(
+      currentHalves: _spoonHalves,
+      damageHalves: halves,
+    );
     _cleanPasses = 0;
     _pressureReliefUntil = _elapsed + 4;
-    _invulnerableUntil = _elapsed + .55;
-    _moveDirection = 0;
+    _damageGraceUntil = _elapsed + .55;
+    _controlLockedUntil = _elapsed + .12;
     _emitHud(force: true);
   }
 
@@ -418,11 +527,42 @@ class NbndGame extends FlameGame {
       _GameSnapshot(
         elapsed: _elapsed,
         playerAngle: _playerAngle,
+        spoonHalves: _spoonHalves,
+        scoreBonus: _scoreBonus,
+        cleanPasses: _cleanPasses,
+        resonance: _resonance,
+        spawnTimer: _spawnTimer,
+        orbSpawnTimer: _orbSpawnTimer,
+        abilityCooldownRemaining: _abilityCooldownRemaining,
+        powerImmunityUntil: _powerImmunityUntil,
+        damageGraceUntil: _damageGraceUntil,
+        pressureReliefUntil: _pressureReliefUntil,
+        lastGap: _lastGap,
+        sequenceIndex: _sequenceIndex,
         rings: _rings
             .map(
               (ObstacleRing ring) => _RingSnapshot(
                 radius: ring.radius,
-                centers: List<double>.from(ring.gapCenters),
+                previousRadius: ring.previousRadius,
+                thickness: ring.thickness,
+                gapCenters: List<double>.from(ring.gapCenters),
+                gapWidth: ring.gapWidth,
+                inwardSpeed: ring.inwardSpeed,
+                rotationSpeed: ring.rotationSpeed,
+                preview: ring.preview,
+                checkedCollision: ring.checkedCollision,
+                resolved: ring.resolved,
+              ),
+            )
+            .toList(growable: false),
+        orbs: _spoonOrbs
+            .map(
+              (SpoonOrb orb) => _OrbSnapshot(
+                radius: orb.radius,
+                angle: orb.angle,
+                inwardSpeed: orb.inwardSpeed,
+                angularSpeed: orb.angularSpeed,
+                resolved: orb.resolved,
               ),
             )
             .toList(growable: false),
@@ -433,20 +573,73 @@ class NbndGame extends FlameGame {
     }
   }
 
-  void _rewindOneSecond() {
-    if (_history.isEmpty) return;
+  bool _rewindOneSecond() {
+    if (!hasSufficientRewindHistory(_history.length)) return false;
     final _GameSnapshot snapshot = _history.first;
+    _elapsed = snapshot.elapsed;
     _playerAngle = snapshot.playerAngle;
-    final int count = math.min(_rings.length, snapshot.rings.length);
-    for (int index = 0; index < count; index++) {
-      _rings[index].radius = snapshot.rings[index].radius;
-      _rings[index].previousRadius = snapshot.rings[index].radius;
-      _rings[index].gapCenters
-        ..clear()
-        ..addAll(snapshot.rings[index].centers);
-      _rings[index].checkedCollision = false;
+    _spoonHalves = snapshot.spoonHalves;
+    _scoreBonus = snapshot.scoreBonus;
+    _cleanPasses = snapshot.cleanPasses;
+    _resonance = snapshot.resonance;
+    _spawnTimer = snapshot.spawnTimer;
+    _orbSpawnTimer = snapshot.orbSpawnTimer;
+    _abilityCooldownRemaining = snapshot.abilityCooldownRemaining;
+    _powerImmunityUntil = snapshot.powerImmunityUntil;
+    _damageGraceUntil = snapshot.damageGraceUntil;
+    _pressureReliefUntil = snapshot.pressureReliefUntil;
+    _lastGap = snapshot.lastGap;
+    _sequenceIndex = snapshot.sequenceIndex;
+
+    restoreSnapshotList<ObstacleRing, _RingSnapshot>(
+      target: _rings,
+      snapshots: snapshot.rings,
+      restore: (_RingSnapshot saved) {
+        final ObstacleRing ring = ObstacleRing(
+          radius: saved.radius,
+          thickness: saved.thickness,
+          gapCenters: List<double>.from(saved.gapCenters),
+          gapWidth: saved.gapWidth,
+          inwardSpeed: saved.inwardSpeed,
+          rotationSpeed: saved.rotationSpeed,
+          preview: saved.preview,
+        );
+        ring.previousRadius = saved.previousRadius;
+        ring.checkedCollision = saved.checkedCollision;
+        ring.resolved = saved.resolved;
+        return ring;
+      },
+    );
+    restoreSnapshotList<SpoonOrb, _OrbSnapshot>(
+      target: _spoonOrbs,
+      snapshots: snapshot.orbs,
+      restore: (_OrbSnapshot saved) {
+        final SpoonOrb orb = SpoonOrb(
+          radius: saved.radius,
+          angle: saved.angle,
+          inwardSpeed: saved.inwardSpeed,
+          angularSpeed: saved.angularSpeed,
+        );
+        orb.resolved = saved.resolved;
+        return orb;
+      },
+    );
+    for (final ObstacleRing ring in _rings) {
+      if (!ring.checkedCollision &&
+          sweptRingTouchesPlayer(
+            previousRadius: ring.previousRadius,
+            currentRadius: ring.radius,
+            ringThickness: ring.thickness,
+            playerRadius: _playerRadius,
+            playerRadialHalfSize: 12,
+          )) {
+        ring.previousRadius = ring.radius;
+      }
     }
     _history.clear();
+    _rewindFeedbackUntil = _elapsed + .55;
+    _emitHud(force: true);
+    return true;
   }
 
   void _emitHud({bool force = false}) {
@@ -466,6 +659,7 @@ class NbndGame extends FlameGame {
         cleanPasses: _cleanPasses,
         flowMultiplier: flowMultiplier(_cleanPasses),
         breathing: _isBreathing,
+        recovering: _elapsed < _orbRecoveryUntil,
         state: _state,
       ),
     );
@@ -491,9 +685,13 @@ class NbndGame extends FlameGame {
 
     _drawGrid(canvas, center);
     _drawCore(canvas, center);
+    _drawRewindFeedback(canvas, center);
     _drawPreview(canvas, center);
     for (final ObstacleRing ring in _rings) {
       _drawRing(canvas, center, ring);
+    }
+    for (final SpoonOrb orb in _spoonOrbs) {
+      _drawSpoonOrb(canvas, center, orb);
     }
     _drawPlayer(canvas, center);
 
@@ -539,14 +737,38 @@ class NbndGame extends FlameGame {
   }
 
   void _drawCore(Canvas canvas, Offset center) {
-    final double radius = _playerRadius * .45;
     final double charge = profile.cooldown == 0
         ? 1
         : 1 - (_abilityCooldownRemaining / profile.cooldown).clamp(0.0, 1.0);
+    final bool ready = charge >= .999 && _abilityHasEffect;
+    final double pulseAmplitude = settings.reducedFlashes ? .015 : .045;
+    final double pulse = ready
+        ? .5 + .5 * math.sin(_elapsed * math.pi * 1.35)
+        : 0;
+    final double activationExpansion = _elapsed < _abilityFeedbackUntil
+        ? ((_abilityFeedbackUntil - _elapsed) / .42).clamp(0.0, 1.0) * .14
+        : 0;
+    final double radius =
+        _playerRadius *
+        .45 *
+        (1 + pulse * pulseAmplitude + activationExpansion);
+    final Color coreColor = ready
+        ? Color.lerp(neuroType.color, const Color(0xFFFFFFFF), .34)!
+        : neuroType.color;
+    if (ready) {
+      canvas.drawCircle(
+        center,
+        radius + 13 + pulse * 3,
+        Paint()
+          ..color = coreColor.withValues(
+            alpha: settings.reducedFlashes ? .10 : .12 + pulse * .08,
+          ),
+      );
+    }
     final Paint fill = Paint()
       ..shader = RadialGradient(
         colors: <Color>[
-          neuroType.color.withValues(alpha: .42),
+          coreColor.withValues(alpha: ready ? .58 : .42),
           neuroType.color.withValues(alpha: .10),
         ],
       ).createShader(Rect.fromCircle(center: center, radius: radius));
@@ -555,7 +777,7 @@ class NbndGame extends FlameGame {
       center,
       radius,
       Paint()
-        ..color = neuroType.color
+        ..color = coreColor
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.5,
     );
@@ -565,30 +787,71 @@ class NbndGame extends FlameGame {
       math.pi * 2 * charge,
       false,
       Paint()
-        ..color = charge >= 1 ? const Color(0xFFFFFFFF) : neuroType.color
+        ..color = ready ? coreColor : neuroType.color
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round
         ..strokeWidth = 4,
     );
+    _drawPowerIcon(canvas, center, radius, ready);
+  }
+
+  void _drawPowerIcon(Canvas canvas, Offset center, double radius, bool ready) {
+    final ui.Image? icon = _powerIcon;
+    if (icon == null) return;
+
+    final bool cooldownFull =
+        profile.cooldown == 0 || _abilityCooldownRemaining <= 0;
+    final double activationScale = _elapsed < _abilityFeedbackUntil
+        ? ((_abilityFeedbackUntil - _elapsed) / .42).clamp(0.0, 1.0) * .08
+        : 0;
+    final double iconSide =
+        radius * (ready ? 1.30 : 1.22) * (1 + activationScale);
+    final double alpha = ready
+        ? 1
+        : cooldownFull && !_abilityHasEffect
+        ? .52
+        : .74;
+    final Rect destination = Rect.fromCenter(
+      center: center,
+      width: iconSide,
+      height: iconSide,
+    );
+    final Rect source = Rect.fromLTWH(
+      0,
+      0,
+      icon.width.toDouble(),
+      icon.height.toDouble(),
+    );
+    if (alpha < 1) {
+      canvas.saveLayer(
+        destination,
+        Paint()..color = Color(0xFFFFFFFF).withValues(alpha: alpha),
+      );
+    }
+    canvas.drawImageRect(
+      icon,
+      source,
+      destination,
+      Paint()..filterQuality = FilterQuality.high,
+    );
+    if (alpha < 1) {
+      canvas.restore();
+    }
+  }
+
+  void _drawRewindFeedback(Canvas canvas, Offset center) {
+    if (_elapsed >= _rewindFeedbackUntil) return;
+    final double progress =
+        1 - ((_rewindFeedbackUntil - _elapsed) / .55).clamp(0.0, 1.0);
     canvas.drawCircle(
       center,
-      radius * .42,
+      _playerRadius * (.55 + progress * 1.9),
       Paint()
         ..color = const Color(
-          0xFFFFFFFF,
-        ).withValues(alpha: charge >= 1 ? .9 : .3)
+          0xFFFFD166,
+        ).withValues(alpha: (1 - progress) * .36)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 5,
-    );
-    canvas.drawLine(
-      center.translate(0, -radius * .18),
-      center.translate(0, radius * .22),
-      Paint()
-        ..color = const Color(
-          0xFFFFFFFF,
-        ).withValues(alpha: charge >= 1 ? .95 : .42)
-        ..strokeCap = StrokeCap.round
-        ..strokeWidth = 5,
+        ..strokeWidth = 4 * (1 - progress) + 1,
     );
   }
 
@@ -632,7 +895,7 @@ class NbndGame extends FlameGame {
     final double distance = (ring.radius - _playerRadius).abs();
     final double proximity = (1 - distance / 240).clamp(0.0, 1.0).toDouble();
     final double alpha = settings.reducedFlashes ? .72 : .55 + proximity * .4;
-    if (_stage == 'FRACTURA') {
+    if (_stage == 'fracture') {
       return Color.lerp(
         neuroType.color,
         const Color(0xFFFF5F7A),
@@ -642,19 +905,45 @@ class NbndGame extends FlameGame {
     return neuroType.color.withValues(alpha: alpha);
   }
 
+  void _drawSpoonOrb(Canvas canvas, Offset center, SpoonOrb orb) {
+    final Offset position =
+        center + Offset(math.cos(orb.angle), math.sin(orb.angle)) * orb.radius;
+    final double pulse = settings.reducedFlashes
+        ? 1
+        : .5 + .5 * math.sin(_elapsed * 5.5);
+    final double haloRadius = 14 + pulse * 5;
+    canvas.drawCircle(
+      position,
+      haloRadius,
+      Paint()
+        ..shader = RadialGradient(
+          colors: <Color>[
+            const Color(0xFFFFD45C).withValues(alpha: .38),
+            const Color(0xFFFFD45C).withValues(alpha: 0),
+          ],
+        ).createShader(Rect.fromCircle(center: position, radius: haloRadius)),
+    );
+    canvas.drawCircle(position, 8, Paint()..color = const Color(0xFFFFD45C));
+    canvas.drawCircle(position, 3, Paint()..color = const Color(0xFFFFFFFF));
+  }
+
   void _drawPlayer(Canvas canvas, Offset center) {
     final Offset position =
         center +
         Offset(math.cos(_playerAngle), math.sin(_playerAngle)) * _playerRadius;
-    final bool invulnerable = _elapsed < _invulnerableUntil;
+    final bool powerProtected = _elapsed < _powerImmunityUntil;
+    final bool damageGrace = _elapsed < _damageGraceUntil;
     final bool flashing = _elapsed < _hitFlashUntil;
-    final Color playerColor = flashing
+    final Color playerColor = powerProtected
+        ? Color.lerp(neuroType.color, const Color(0xFFFFFFFF), .45)!
+        : flashing
         ? const Color(0xFFFFFFFF)
         : const Color(0xFFB58CFF);
     canvas.drawCircle(
       position,
-      invulnerable ? 17 : 13,
-      Paint()..color = playerColor.withValues(alpha: invulnerable ? .25 : .10),
+      powerProtected ? 18 : 13,
+      Paint()
+        ..color = playerColor.withValues(alpha: powerProtected ? .28 : .10),
     );
     canvas.drawCircle(
       position,
@@ -667,7 +956,7 @@ class NbndGame extends FlameGame {
     canvas.drawCircle(
       position,
       3.5,
-      Paint()..color = playerColor.withValues(alpha: .65),
+      Paint()..color = playerColor.withValues(alpha: damageGrace ? .30 : .65),
     );
   }
 }
@@ -676,19 +965,80 @@ class _GameSnapshot {
   const _GameSnapshot({
     required this.elapsed,
     required this.playerAngle,
+    required this.spoonHalves,
+    required this.scoreBonus,
+    required this.cleanPasses,
+    required this.resonance,
+    required this.spawnTimer,
+    required this.orbSpawnTimer,
+    required this.abilityCooldownRemaining,
+    required this.powerImmunityUntil,
+    required this.damageGraceUntil,
+    required this.pressureReliefUntil,
+    required this.lastGap,
+    required this.sequenceIndex,
     required this.rings,
+    required this.orbs,
   });
 
   final double elapsed;
   final double playerAngle;
+  final int spoonHalves;
+  final int scoreBonus;
+  final int cleanPasses;
+  final double resonance;
+  final double spawnTimer;
+  final double orbSpawnTimer;
+  final double abilityCooldownRemaining;
+  final double powerImmunityUntil;
+  final double damageGraceUntil;
+  final double pressureReliefUntil;
+  final double lastGap;
+  final int sequenceIndex;
   final List<_RingSnapshot> rings;
+  final List<_OrbSnapshot> orbs;
 }
 
 class _RingSnapshot {
-  const _RingSnapshot({required this.radius, required this.centers});
+  const _RingSnapshot({
+    required this.radius,
+    required this.previousRadius,
+    required this.thickness,
+    required this.gapCenters,
+    required this.gapWidth,
+    required this.inwardSpeed,
+    required this.rotationSpeed,
+    required this.preview,
+    required this.checkedCollision,
+    required this.resolved,
+  });
 
   final double radius;
-  final List<double> centers;
+  final double previousRadius;
+  final double thickness;
+  final List<double> gapCenters;
+  final double gapWidth;
+  final double inwardSpeed;
+  final double rotationSpeed;
+  final bool preview;
+  final bool checkedCollision;
+  final bool resolved;
+}
+
+class _OrbSnapshot {
+  const _OrbSnapshot({
+    required this.radius,
+    required this.angle,
+    required this.inwardSpeed,
+    required this.angularSpeed,
+    required this.resolved,
+  });
+
+  final double radius;
+  final double angle;
+  final double inwardSpeed;
+  final double angularSpeed;
+  final bool resolved;
 }
 
 extension _FirstOrNull<T> on Iterable<T> {

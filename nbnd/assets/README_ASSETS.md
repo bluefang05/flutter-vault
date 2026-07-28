@@ -13,6 +13,14 @@ La carpeta `assets/images/spoons/` contiene assets PNG transparentes listos para
 
 El widget `lib/widgets/spoon_life_bar.dart` selecciona automáticamente el asset correcto según la reserva restante. Cada choque consume media cuchara y el personaje recibe aproximadamente un segundo de invulnerabilidad.
 
+## Orbe de recuperación
+
+El orbe dorado se genera con Canvas en `lib/game/nbnd_game.dart`: aparece cada
+18-28 segundos y recupera media cuchara sin superar la reserva máxima. Su halo
+pulsa para distinguirlo de los obstáculos; con "Reducir destellos" permanece
+estable. Se mantiene como arte geométrico generado por código para conservar
+nitidez en todas las densidades de pantalla.
+
 ## Sustitución recomendada
 
 - `assets/images/character_placeholder.png`: ilustración del personaje NBND.

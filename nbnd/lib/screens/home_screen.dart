@@ -5,7 +5,9 @@ import '../l10n/app_localizations.dart';
 import '../models/game_settings.dart';
 import '../models/neuro_type.dart';
 import '../services/app_storage.dart';
+import '../widgets/neuro_profile_icon.dart';
 import 'game_screen.dart';
+import 'profile_info_screen.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -75,6 +77,15 @@ class _HomeScreenState extends State<HomeScreen> {
     if (updated != null && mounted) {
       setState(() => _settings = updated);
     }
+  }
+
+  Future<void> _openProfileInfo([NeuroType? initialType]) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) =>
+            ProfileInfoScreen(initialType: initialType ?? _selected),
+      ),
+    );
   }
 
   Future<void> _startGame() async {
@@ -170,6 +181,33 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         Positioned(
+                          top: 14,
+                          right: 14,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 220),
+                            transitionBuilder:
+                                (Widget child, Animation<double> animation) {
+                                  return FadeTransition(
+                                    opacity: animation,
+                                    child: ScaleTransition(
+                                      scale: Tween<double>(
+                                        begin: .92,
+                                        end: 1,
+                                      ).animate(animation),
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                            child: NeuroProfileIcon(
+                              key: ValueKey<NeuroType>(_selected),
+                              neuroType: _selected,
+                              size: 62,
+                              selected: true,
+                              borderColor: _selected.color,
+                            ),
+                          ),
+                        ),
+                        Positioned(
                           left: 16,
                           right: 16,
                           bottom: 14,
@@ -178,7 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Chip(label: Text('${t.record}: $_bestScore')),
                               const SizedBox(width: 8),
                               if (_settings.practiceMode)
-                                const Chip(label: Text('Practica')),
+                                Chip(label: Text(t.practiceMode)),
                             ],
                           ),
                         ),
@@ -191,9 +229,21 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 22, 20, 10),
               sliver: SliverToBoxAdapter(
-                child: Text(
-                  t.choosePower,
-                  style: Theme.of(context).textTheme.titleLarge,
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Text(
+                        t.choosePower,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    TextButton.icon(
+                      key: const ValueKey<String>('learn-profiles-home'),
+                      onPressed: () => _openProfileInfo(),
+                      icon: const Icon(Icons.info_outline_rounded),
+                      label: Text(t.learnProfiles),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -226,6 +276,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             profile: profile,
                             selected: selected,
                             initialReserveLabel: t.initialReserve,
+                            onInfo: () => _openProfileInfo(type),
                             onTap: () => _select(type),
                           ),
                         );
@@ -255,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: FilledButton.icon(
                   onPressed: _startGame,
                   icon: const Icon(Icons.play_arrow_rounded),
-                  label: Text('${t.play} con ${_selected.code}'),
+                  label: Text(t.playWith(_selected.code)),
                 ),
               ),
             ),
@@ -272,6 +323,7 @@ class _PowerCard extends StatelessWidget {
     required this.profile,
     required this.selected,
     required this.initialReserveLabel,
+    required this.onInfo,
     required this.onTap,
   });
 
@@ -279,6 +331,7 @@ class _PowerCard extends StatelessWidget {
   final NeuroPowerProfile profile;
   final bool selected;
   final String initialReserveLabel;
+  final VoidCallback onInfo;
   final VoidCallback onTap;
 
   @override
@@ -304,46 +357,92 @@ class _PowerCard extends StatelessWidget {
               ],
             ),
           ),
-          child: Row(
+          child: Stack(
             children: <Widget>[
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: type.color.withValues(alpha: .18),
-                foregroundColor: type.color,
-                child: Text(type.code.substring(0, 1)),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              Padding(
+                padding: const EdgeInsets.only(right: 72),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
-                    Text(
-                      '${type.code} · ${type.powerName}',
-                      style: Theme.of(context).textTheme.titleMedium,
+                    NeuroProfileIcon(
+                      neuroType: type,
+                      size: 58,
+                      selected: selected,
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      type.description,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    const SizedBox(width: 13),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            AppLocalizations.of(context).neuroTypeName(type),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.08,
+                                ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            AppLocalizations.of(context).powerName(type),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.labelLarge?.copyWith(color: type.color),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            AppLocalizations.of(context).neuroDescription(type),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '$initialReserveLabel: ${profile.maxSpoonHalves ~/ 2} cucharas',
+                            style: Theme.of(
+                              context,
+                            ).textTheme.labelSmall?.copyWith(color: type.color),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '$initialReserveLabel: ${profile.maxSpoonHalves ~/ 2} cucharas',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.labelSmall?.copyWith(color: type.color),
                     ),
                   ],
                 ),
               ),
-              Icon(
-                selected ? Icons.radio_button_checked : Icons.swipe_rounded,
-                color: selected ? type.color : Colors.white54,
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    IconButton(
+                      key: ValueKey<String>('profile-info-${type.code}'),
+                      visualDensity: VisualDensity.compact,
+                      tooltip: AppLocalizations.of(context).learnProfiles,
+                      onPressed: onInfo,
+                      icon: Icon(
+                        Icons.info_outline_rounded,
+                        color: selected ? type.color : Colors.white60,
+                      ),
+                    ),
+                    Icon(
+                      selected
+                          ? Icons.radio_button_checked
+                          : Icons.swipe_rounded,
+                      color: selected ? type.color : Colors.white54,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

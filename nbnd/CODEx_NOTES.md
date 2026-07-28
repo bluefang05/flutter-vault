@@ -18,3 +18,5 @@
   aversion, or mechanics intended to create dark flow.
 - Gameplay has clean-pass streaks, near-miss bonuses, adaptive recovery after
   damage, and short breathing windows between pressure cycles.
+- Golden recovery orbs spawn every 18-28 seconds, restore one spoon half up to
+  the profile maximum, and use a static halo when reduced flashes is enabled.

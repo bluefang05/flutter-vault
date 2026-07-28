@@ -18,10 +18,7 @@ abstract final class NbndTheme {
       brightness: Brightness.dark,
       colorScheme: scheme,
       scaffoldBackgroundColor: background,
-      cardTheme: const CardThemeData(
-        color: surface,
-        margin: EdgeInsets.zero,
-      ),
+      cardTheme: const CardThemeData(color: surface, margin: EdgeInsets.zero),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(52),

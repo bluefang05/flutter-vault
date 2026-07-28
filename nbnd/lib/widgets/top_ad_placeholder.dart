@@ -25,9 +25,9 @@ class TopAdPlaceholder extends StatelessWidget {
         child: Text(
           'ESPACIO PUBLICITARIO',
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                letterSpacing: 1.3,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            letterSpacing: 1.3,
+          ),
         ),
       ),
     );
