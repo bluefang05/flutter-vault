@@ -1,0 +1,22 @@
+NBND 0.2.0+2 — actualización de barra de cucharas
+
+Opción A: descomprime la carpeta "nbnd" en:
+C:\Users\manue\OneDrive\Desktop\proyectos\flutter\
+
+y permite reemplazar los archivos del proyecto existente. La carpeta android existente no se elimina.
+
+Opción B: descomprime en una carpeta nueva y ejecuta:
+powershell -ExecutionPolicy Bypass -File .\tool\bootstrap_windows.ps1
+
+Después ejecuta:
+flutter pub get
+flutter analyze
+flutter test
+flutter run
+
+Cambios principales:
+- barra de vida/reserva con cucharas llenas, medias y vacías;
+- cada golpe quita media cuchara;
+- reservas distintas por perfil;
+- TAG solo rebobina automáticamente cuando el poder está disponible;
+- assets transparentes incluidos en assets/images/spoons/.

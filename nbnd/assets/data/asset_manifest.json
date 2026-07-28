@@ -1,0 +1,17 @@
+{
+  "character_placeholder": "assets/images/character_placeholder.png",
+  "icon_placeholder": "assets/images/icon_placeholder.png",
+  "icon_nbnd": "assets/images/icon_nbnd.png",
+  "spoon_life": {
+    "full": "assets/images/spoons/spoon_full.png",
+    "half": "assets/images/spoons/spoon_half.png",
+    "empty": "assets/images/spoons/spoon_empty.png",
+    "optional_panel": "assets/images/spoons/spoon_panel.png"
+  },
+  "audio": {
+    "pulse": "assets/audio/pulse.wav",
+    "power": "assets/audio/power.wav",
+    "hit": "assets/audio/hit.wav"
+  },
+  "replacement_note": "Mantén las rutas o actualiza pubspec.yaml y las referencias del código."
+}
