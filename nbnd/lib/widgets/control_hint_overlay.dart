@@ -8,6 +8,8 @@ class ControlHintOverlay extends StatefulWidget {
     required this.counterClockwise,
     required this.clockwise,
     required this.touchAndHold,
+    required this.powerAction,
+    required this.touchCenter,
     required this.centerRadius,
     required this.reducedFlashes,
   });
@@ -15,6 +17,8 @@ class ControlHintOverlay extends StatefulWidget {
   final String counterClockwise;
   final String clockwise;
   final String touchAndHold;
+  final String powerAction;
+  final String touchCenter;
   final double centerRadius;
   final bool reducedFlashes;
 
@@ -83,6 +87,12 @@ class _ControlHintOverlayState extends State<ControlHintOverlay>
                 child: Stack(
                   fit: StackFit.expand,
                   children: <Widget>[
+                    _CenterPowerLabel(
+                      centerRadius: widget.centerRadius,
+                      title: widget.powerAction,
+                      subtitle: widget.touchCenter,
+                      scale: 1 + breath * .035,
+                    ),
                     _ZoneLabel(
                       alignment: Alignment(alignmentX, .18),
                       maxWidth: sideWidth,
@@ -107,6 +117,70 @@ class _ControlHintOverlayState extends State<ControlHintOverlay>
             },
           );
         },
+      ),
+    );
+  }
+}
+
+class _CenterPowerLabel extends StatelessWidget {
+  const _CenterPowerLabel({
+    required this.centerRadius,
+    required this.title,
+    required this.subtitle,
+    required this.scale,
+  });
+
+  final double centerRadius;
+  final String title;
+  final String subtitle;
+  final double scale;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Transform.translate(
+        offset: Offset(0, centerRadius + 56),
+        child: Transform.scale(
+          scale: scale,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 150),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                const Icon(
+                  Icons.touch_app_rounded,
+                  size: 34,
+                  color: Color(0xFFFFC784),
+                ),
+                const SizedBox(height: 3),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: const Color(0xFFFFC784),
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: .7,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    subtitle,
+                    maxLines: 1,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Colors.white70,
+                      letterSpacing: .5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -216,9 +290,17 @@ class _ControlZonePainter extends CustomPainter {
       center,
       centerRadius + 3 + math.sin(breath * math.pi) * 2,
       Paint()
-        ..color = Colors.white.withValues(alpha: .18)
+        ..color = const Color(0xFFFFC784).withValues(alpha: .42)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5,
+    );
+    canvas.drawCircle(
+      center,
+      centerRadius + 12 + math.sin(breath * math.pi) * 5,
+      Paint()
+        ..color = const Color(0xFFFFC784).withValues(alpha: .18)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
     );
   }
 

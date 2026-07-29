@@ -5,9 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class TopAdBanner extends StatefulWidget {
-  const TopAdBanner({super.key, required this.visible});
-
-  final bool visible;
+  const TopAdBanner({super.key});
 
   @override
   State<TopAdBanner> createState() => _TopAdBannerState();
@@ -39,11 +37,8 @@ class _TopAdBannerState extends State<TopAdBanner> {
   @override
   void didUpdateWidget(covariant TopAdBanner oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.visible && _bannerAd == null) {
+    if (_bannerAd == null) {
       _loadBannerForCurrentWidth();
-    }
-    if (!widget.visible) {
-      _disposeBanner();
     }
   }
 
@@ -63,7 +58,7 @@ class _TopAdBannerState extends State<TopAdBanner> {
       defaultTargetPlatform == TargetPlatform.iOS;
 
   void _loadBannerForCurrentWidth() {
-    if (!widget.visible || kIsWeb || !_supportsAds) return;
+    if (kIsWeb || !_supportsAds) return;
     final int width = MediaQuery.sizeOf(context).width.floor();
     if (width <= 0 || _loadingWidth == width) return;
     if (_requestedWidth == width && _bannerAd != null) return;
@@ -155,7 +150,7 @@ class _TopAdBannerState extends State<TopAdBanner> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.visible || kIsWeb || !_supportsAds) {
+    if (kIsWeb || !_supportsAds) {
       return const SizedBox.shrink();
     }
     final BannerAd? banner = _bannerAd;

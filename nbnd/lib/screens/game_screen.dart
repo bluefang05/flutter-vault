@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +12,7 @@ import '../l10n/app_localizations.dart';
 import '../models/game_settings.dart';
 import '../models/neuro_type.dart';
 import '../services/app_storage.dart';
+import '../services/sfx_player.dart';
 import '../widgets/spoon_life_bar.dart';
 import '../widgets/control_hint_overlay.dart';
 import '../widgets/top_ad_banner.dart';
@@ -37,6 +40,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   late HudSnapshot _hud;
   final MovementPointerTracker _pointerTracker = MovementPointerTracker();
   bool _showControlHint = true;
+  bool _lastRunWasRecord = false;
 
   @override
   void initState() {
@@ -73,6 +77,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _pointerTracker.clear();
+    unawaited(SfxPlayer.instance.stopGameMusic());
     super.dispose();
   }
 
@@ -83,22 +88,28 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       _pointerTracker.clear();
       _game.stopMoving();
       _game.pauseGame();
+      unawaited(SfxPlayer.instance.pauseGameMusic());
     }
   }
 
   Future<void> _handleGameOver(int score) async {
+    await SfxPlayer.instance.stopGameMusic();
     if (widget.settings.haptics) {
       await HapticFeedback.heavyImpact();
     }
     if (score <= _bestScore) return;
     _bestScore = score;
+    _lastRunWasRecord = true;
+    SfxPlayer.instance.playNewRecord();
     await _storage.setInt('best_score', score);
     if (mounted) setState(() {});
   }
 
   Future<void> _activateAbility() async {
     final bool activated = _game.activateAbility();
-    if (activated && widget.settings.haptics) {
+    if (!activated) return;
+    unawaited(SfxPlayer.instance.playPowerTap());
+    if (widget.settings.haptics) {
       await HapticFeedback.mediumImpact();
     }
   }
@@ -107,6 +118,18 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     _pointerTracker.clear();
     _game.stopMoving();
     _game.pauseGame();
+    unawaited(SfxPlayer.instance.pauseGameMusic());
+  }
+
+  void _resumeGame() {
+    _game.resumeGame();
+    unawaited(SfxPlayer.instance.resumeGameMusic());
+  }
+
+  void _restartGame() {
+    setState(() => _lastRunWasRecord = false);
+    _game.restart();
+    unawaited(SfxPlayer.instance.playGameMusic());
   }
 
   void _handlePointerDown(PointerDownEvent event, BoxConstraints constraints) {
@@ -119,7 +142,13 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         .toDouble();
     if ((event.localPosition - center).distance <= activationRadius) {
       _pointerTracker.press(event.pointer, ControlPointerZone.power);
-      if (_hud.state != GameRunState.ready) {
+      if (_showControlHint) {
+        setState(() => _showControlHint = false);
+      }
+      if (_hud.state == GameRunState.ready) {
+        unawaited(SfxPlayer.instance.playGameMusic());
+        _game.start();
+      } else {
         _activateAbility();
       }
       return;
@@ -131,6 +160,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     _pointerTracker.press(event.pointer, zone);
     if (_showControlHint) {
       setState(() => _showControlHint = false);
+    }
+    if (_hud.state == GameRunState.ready) {
+      unawaited(SfxPlayer.instance.playGameMusic());
     }
     _game.setMoveDirection(_pointerTracker.movementDirection);
   }
@@ -157,7 +189,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       child: Scaffold(
         body: Column(
           children: <Widget>[
-            TopAdBanner(visible: widget.settings.showAdPlaceholder),
+            const TopAdBanner(),
             Expanded(
               child: LayoutBuilder(
                 builder: (BuildContext context, BoxConstraints constraints) {
@@ -182,6 +214,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                                 counterClockwise: t.counterClockwise,
                                 clockwise: t.clockwise,
                                 touchAndHold: t.touchAndHold,
+                                powerAction: t.powerAction,
+                                touchCenter: t.touchCenter,
                                 centerRadius:
                                     (constraints.biggest.shortestSide * .13)
                                         .clamp(58.0, 92.0)
@@ -203,18 +237,21 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                           title: t.pauseTitle,
                           message: t.pauseMessage,
                           action: t.resume,
-                          onPressed: _game.resumeGame,
+                          onPressed: _resumeGame,
                         ),
                       if (_hud.state == GameRunState.gameOver)
                         _MessageOverlay(
                           title: t.gameOverTitle,
                           message: t.scoreLine(_hud.score, _bestScore),
+                          highlight: _lastRunWasRecord
+                              ? t.newRecordTitle
+                              : null,
                           action: t.retry,
                           secondaryAction: t.backToMenu,
                           onSecondaryPressed: () {
                             Navigator.of(context).pop(_bestScore);
                           },
-                          onPressed: _game.restart,
+                          onPressed: _restartGame,
                         ),
                     ],
                   );
@@ -335,6 +372,7 @@ class _MessageOverlay extends StatelessWidget {
     required this.message,
     required this.action,
     required this.onPressed,
+    this.highlight,
     this.secondaryAction,
     this.onSecondaryPressed,
   });
@@ -343,6 +381,7 @@ class _MessageOverlay extends StatelessWidget {
   final String message;
   final String action;
   final VoidCallback onPressed;
+  final String? highlight;
   final String? secondaryAction;
   final VoidCallback? onSecondaryPressed;
 
@@ -359,6 +398,64 @@ class _MessageOverlay extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
+                  if (highlight != null) ...<Widget>[
+                    TweenAnimationBuilder<double>(
+                      tween: Tween<double>(begin: .82, end: 1),
+                      duration: const Duration(milliseconds: 520),
+                      curve: Curves.elasticOut,
+                      builder:
+                          (BuildContext context, double scale, Widget? child) {
+                            return Transform.scale(scale: scale, child: child);
+                          },
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: <Color>[
+                              Color(0xFFFFD45C),
+                              Color(0xFFFF8A5C),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: <BoxShadow>[
+                            BoxShadow(
+                              color: const Color(
+                                0xFFFFD45C,
+                              ).withValues(alpha: .26),
+                              blurRadius: 18,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              const Icon(
+                                Icons.emoji_events_rounded,
+                                color: Color(0xFF1B1320),
+                                size: 20,
+                              ),
+                              const SizedBox(width: 7),
+                              Text(
+                                highlight!,
+                                style: Theme.of(context).textTheme.labelLarge
+                                    ?.copyWith(
+                                      color: const Color(0xFF1B1320),
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: .7,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
                   Text(title, style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 8),
                   Text(message, textAlign: TextAlign.center),

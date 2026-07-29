@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 
 import '../models/game_settings.dart';
 import '../models/neuro_type.dart';
+import '../services/sfx_player.dart';
+import 'difficulty_curve.dart';
 import 'game_math.dart';
 import 'hud_snapshot.dart';
 import 'models/collision_result.dart';
@@ -71,7 +73,8 @@ class NbndGame extends FlameGame {
   double get _playerRadius => math.min(size.x, size.y) * .19;
   double get _playerHalfAngle => .24;
   double get _outerSpawnRadius => math.max(size.x, size.y) * .68;
-  double get _minimumRingSeparation => math.max(92, _playerRadius * 1.35);
+  double get _ringThickness => 15;
+  double get _minimumRingSeparation => math.max(112, _playerRadius * 1.55);
   int get score => (_elapsed * 100).floor() + _scoreBonus;
   List<ObstacleRing> get _tocCandidates => _rings
       .where(
@@ -304,44 +307,36 @@ class NbndGame extends FlameGame {
   }
 
   double get _difficulty {
-    final double raw = 1 + (_elapsed / 32);
     final double practice = settings.practiceMode ? .78 : 1;
     final double recovery = _elapsed < _pressureReliefUntil ? .84 : 1;
-    return raw * practice * recovery;
+    return DifficultyCurve.multiplier(_elapsed) * practice * recovery;
   }
 
   double get _spawnInterval {
-    final double base = math.max(.52, 1.38 - (_elapsed * .008));
+    final double base = DifficultyCurve.spawnInterval(_elapsed);
     return _isBreathing ? base * 1.65 : base;
   }
 
   // A short low-pressure window lets attention reset without stopping play.
-  bool get _isBreathing {
-    if (_elapsed < 12) return false;
-    final double cycle = _elapsed % 20;
-    return cycle >= 16 && cycle < 19;
-  }
+  bool get _isBreathing => DifficultyCurve.isBreathing(_elapsed);
 
   double get _nextOrbDelay => 18 + _random.nextDouble() * 10;
 
   bool get _canSpawnRing => hasMinimumRingSeparation(
     spawnRadius: _outerSpawnRadius,
-    existingRadii: _rings
+    spawnThickness: _ringThickness,
+    existingOuterEdges: _rings
         .where((ObstacleRing ring) => !ring.resolved)
-        .map((ObstacleRing ring) => ring.radius),
+        .map((ObstacleRing ring) => ring.radius + ring.thickness / 2),
     minimumSeparation: _minimumRingSeparation,
   );
 
-  String get _stage {
-    if (_elapsed < 20) return 'pulse';
-    if (_elapsed < 45) return 'resonance';
-    return 'fracture';
-  }
+  String get _stage => DifficultyCurve.stage(_elapsed);
 
   void _spawnRing() {
     final double gapWidth = math.max(
       math.pi / 5.5,
-      profile.baseGapWidth - (_elapsed * .0016),
+      profile.baseGapWidth - DifficultyCurve.gapReduction(_elapsed),
     );
 
     final List<double> gaps = <double>[];
@@ -373,7 +368,7 @@ class NbndGame extends FlameGame {
     _rings.add(
       ObstacleRing(
         radius: _outerSpawnRadius,
-        thickness: 15,
+        thickness: _ringThickness,
         gapCenters: gaps,
         gapWidth: gapWidth,
         inwardSpeed: 72 * _difficulty,
@@ -413,6 +408,7 @@ class NbndGame extends FlameGame {
     _scoreBonus += _spoonHalves > previousHalves ? 120 : 40;
     _orbRecoveryUntil = _elapsed + 1.1;
     orb.resolved = true;
+    SfxPlayer.instance.playSpoonCollected();
     if (settings.haptics) {
       HapticFeedback.lightImpact();
     }
@@ -492,6 +488,7 @@ class NbndGame extends FlameGame {
   }
 
   void _triggerHitFeedback(bool strongHit) {
+    SfxPlayer.instance.playHurtCollision();
     if (!settings.reducedFlashes) {
       _hitFlashUntil = _elapsed + .22;
     }

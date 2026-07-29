@@ -1,7 +1,7 @@
 name: nbnd
 description: Juego móvil minimalista radial donde la experiencia cambia según la neurodivergencia elegida.
 publish_to: "none"
-version: 0.2.0+2
+version: 0.2.0+3
 
 environment:
   sdk: ">=3.8.0 <4.0.0"
@@ -18,6 +18,7 @@ dependencies:
   # Newer WebView Android releases require API 24.
   webview_flutter: 4.10.0
   webview_flutter_android: 4.10.1
+  audioplayers: ^6.8.1
 
 dev_dependencies:
   flutter_test:
@@ -30,5 +31,9 @@ flutter:
     - assets/images/
     - assets/images/profiles/
     - assets/images/spoons/
+    - assets/images/backgrounds/
+    - assets/images/gameplay/
     - assets/audio/
+    - assets/audio/music/
+    - assets/audio/sfx/
     - assets/data/

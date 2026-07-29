@@ -206,11 +206,7 @@ Widget _gameTestApp() {
     theme: NbndTheme.dark,
     home: const GameScreen(
       neuroType: NeuroType.tdah,
-      settings: GameSettings(
-        haptics: false,
-        reducedFlashes: true,
-        showAdPlaceholder: false,
-      ),
+      settings: GameSettings(haptics: false, reducedFlashes: true),
       initialBestScore: 0,
     ),
   );

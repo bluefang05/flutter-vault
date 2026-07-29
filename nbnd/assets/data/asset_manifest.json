@@ -22,10 +22,16 @@
     "source": "code_generated",
     "description": "Orbe dorado pulsante renderizado por Canvas para respetar el estilo geometrico y el ajuste de destellos."
   },
+  "future_art": {
+    "backgrounds": "assets/images/backgrounds/",
+    "gameplay": "assets/images/gameplay/"
+  },
   "audio": {
     "pulse": "assets/audio/pulse.wav",
     "power": "assets/audio/power.wav",
-    "hit": "assets/audio/hit.wav"
+    "hit": "assets/audio/hit.wav",
+    "future_music": "assets/audio/music/",
+    "future_sfx": "assets/audio/sfx/"
   },
   "replacement_note": "Mantén las rutas o actualiza pubspec.yaml y las referencias del código."
 }

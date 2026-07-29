@@ -231,7 +231,8 @@ void main() {
     expect(
       hasMinimumRingSeparation(
         spawnRadius: 500,
-        existingRadii: const <double>[405, 260],
+        spawnThickness: 20,
+        existingOuterEdges: const <double>[405, 260],
         minimumSeparation: 100,
       ),
       isFalse,
@@ -239,7 +240,8 @@ void main() {
     expect(
       hasMinimumRingSeparation(
         spawnRadius: 500,
-        existingRadii: const <double>[390, 260],
+        spawnThickness: 20,
+        existingOuterEdges: const <double>[390, 260],
         minimumSeparation: 100,
       ),
       isTrue,
@@ -247,7 +249,8 @@ void main() {
     expect(
       hasMinimumRingSeparation(
         spawnRadius: 500,
-        existingRadii: const <double>[],
+        spawnThickness: 20,
+        existingOuterEdges: const <double>[],
         minimumSeparation: 100,
       ),
       isTrue,

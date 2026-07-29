@@ -23,7 +23,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       'haptics': _settings.haptics,
       'reduced_flashes': _settings.reducedFlashes,
       'practice_mode': _settings.practiceMode,
-      'show_ad_placeholder': _settings.showAdPlaceholder,
     });
     if (mounted) Navigator.of(context).pop(_settings);
   }
@@ -63,16 +62,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
             title: Text(t.practiceMode),
             subtitle: Text(t.practiceModeDescription),
-          ),
-          SwitchListTile.adaptive(
-            value: _settings.showAdPlaceholder,
-            onChanged: (bool value) {
-              setState(
-                () => _settings = _settings.copyWith(showAdPlaceholder: value),
-              );
-            },
-            title: Text(t.showAdSpace),
-            subtitle: Text(t.adSpaceDescription),
           ),
           const SizedBox(height: 12),
           ExpansionTile(

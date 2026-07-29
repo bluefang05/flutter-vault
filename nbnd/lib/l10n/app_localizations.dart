@@ -238,20 +238,6 @@ class AppLocalizations {
     fr: 'Réduit la vitesse générale d’environ 28 %.',
     de: 'Reduziert die Gesamtgeschwindigkeit um etwa 28 %.',
   );
-  String get adSpaceDescription => _pick(
-    es: 'Muestra el banner superior de AdMob.',
-    en: 'Shows the AdMob banner at the top.',
-    pt: 'Mostra o banner do AdMob na parte superior.',
-    fr: 'Affiche la bannière AdMob en haut.',
-    de: 'Zeigt das AdMob-Banner oben an.',
-  );
-  String get showAdSpace => _pick(
-    es: 'Mostrar espacio publicitario',
-    en: 'Show ad space',
-    pt: 'Mostrar espaço publicitário',
-    fr: 'Afficher l’espace publicitaire',
-    de: 'Werbefläche anzeigen',
-  );
   String get save => _pick(
     es: 'Guardar',
     en: 'Save',
@@ -311,6 +297,13 @@ class AppLocalizations {
     pt: 'Fim do pulso',
     fr: 'Fin de l’impulsion',
     de: 'Ende des Pulses',
+  );
+  String get newRecordTitle => _pick(
+    es: 'NUEVO RÉCORD',
+    en: 'NEW RECORD',
+    pt: 'NOVO RECORDE',
+    fr: 'NOUVEAU RECORD',
+    de: 'NEUER REKORD',
   );
   String get retry => _pick(
     es: 'Reintentar',
@@ -399,6 +392,15 @@ class AppLocalizations {
     pt: 'TOQUE E SEGURE',
     fr: 'TOUCHE ET MAINTIENS',
     de: 'BERÜHREN UND HALTEN',
+  );
+  String get powerAction =>
+      _pick(es: 'PODER', en: 'POWER', pt: 'PODER', fr: 'POUVOIR', de: 'KRAFT');
+  String get touchCenter => _pick(
+    es: 'TOCA EL CENTRO',
+    en: 'TAP THE CENTER',
+    pt: 'TOQUE O CENTRO',
+    fr: 'TOUCHE LE CENTRE',
+    de: 'MITTE ANTIPPEN',
   );
   String reserveSemantics(int current, int maximum) => _pick(
     es: 'Reserva: $current de $maximum medias cucharas',

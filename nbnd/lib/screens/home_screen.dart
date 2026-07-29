@@ -46,7 +46,6 @@ class _HomeScreenState extends State<HomeScreen> {
       haptics: await _storage.getBool('haptics') ?? true,
       reducedFlashes: await _storage.getBool('reduced_flashes') ?? false,
       practiceMode: await _storage.getBool('practice_mode') ?? false,
-      showAdPlaceholder: await _storage.getBool('show_ad_placeholder') ?? true,
     );
     if (!mounted) return;
     setState(() {

@@ -199,10 +199,12 @@ bool abilityHasEffect({
 
 bool hasMinimumRingSeparation({
   required double spawnRadius,
-  required Iterable<double> existingRadii,
+  required double spawnThickness,
+  required Iterable<double> existingOuterEdges,
   required double minimumSeparation,
 }) {
-  if (existingRadii.isEmpty) return true;
-  final double outermostRadius = existingRadii.reduce(math.max);
-  return spawnRadius - outermostRadius >= minimumSeparation;
+  if (existingOuterEdges.isEmpty) return true;
+  final double spawnInnerEdge = spawnRadius - spawnThickness / 2;
+  final double outermostExistingEdge = existingOuterEdges.reduce(math.max);
+  return spawnInnerEdge - outermostExistingEdge >= minimumSeparation;
 }
