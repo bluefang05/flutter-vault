@@ -63,6 +63,61 @@ class AppLocalizations {
     fr: 'Choisis ton pouvoir',
     de: 'Wähle deine Kraft',
   );
+  String get recommendedStart => _pick(
+    es: 'Recomendado para empezar',
+    en: 'Recommended start',
+    pt: 'Recomendado para começar',
+    fr: 'Recommandé pour commencer',
+    de: 'Empfohlen zum Start',
+  );
+  String get power =>
+      _pick(es: 'Poder', en: 'Power', pt: 'Poder', fr: 'Pouvoir', de: 'Kraft');
+  String get speed => _pick(
+    es: 'Velocidad',
+    en: 'Speed',
+    pt: 'Velocidade',
+    fr: 'Vitesse',
+    de: 'Tempo',
+  );
+  String get reserve => _pick(
+    es: 'Reserva',
+    en: 'Reserve',
+    pt: 'Reserva',
+    fr: 'Réserve',
+    de: 'Reserve',
+  );
+  String get cooldown => _pick(
+    es: 'Recarga',
+    en: 'Cooldown',
+    pt: 'Recarga',
+    fr: 'Recharge',
+    de: 'Abklingzeit',
+  );
+  String get randomness => _pick(
+    es: 'Aleatoriedad',
+    en: 'Randomness',
+    pt: 'Aleatoriedade',
+    fr: 'Aléatoire',
+    de: 'Zufall',
+  );
+  String get low =>
+      _pick(es: 'Baja', en: 'Low', pt: 'Baixa', fr: 'Basse', de: 'Niedrig');
+  String get medium => _pick(
+    es: 'Media',
+    en: 'Medium',
+    pt: 'Média',
+    fr: 'Moyenne',
+    de: 'Mittel',
+  );
+  String get high =>
+      _pick(es: 'Alta', en: 'High', pt: 'Alta', fr: 'Haute', de: 'Hoch');
+  String spoonsCount(int spoons) => _pick(
+    es: '$spoons cucharas',
+    en: '$spoons spoons',
+    pt: '$spoons colheres',
+    fr: '$spoons cuillères',
+    de: '$spoons Löffel',
+  );
   String get learnProfiles => _pick(
     es: 'Conocer los perfiles',
     en: 'Learn the profiles',
@@ -146,20 +201,6 @@ class AppLocalizations {
     pt: 'Fontes',
     fr: 'Sources',
     de: 'Quellen',
-  );
-  String get seekHelp => _pick(
-    es: 'Buscar ayuda',
-    en: 'Find help',
-    pt: 'Buscar ajuda',
-    fr: 'Chercher de l’aide',
-    de: 'Hilfe suchen',
-  );
-  String get seekHelpBody => _pick(
-    es: 'Si algo de esto se parece a una dificultad real en tu vida, habla con un profesional de salud mental o con una persona de confianza. Si hay peligro inmediato, usa los servicios de emergencia de tu zona.',
-    en: 'If any of this resembles a real difficulty in your life, talk with a mental health professional or someone you trust. If there is immediate danger, use your local emergency services.',
-    pt: 'Se algo disso parece uma dificuldade real na sua vida, fale com um profissional de saúde mental ou com alguém de confiança. Se houver perigo imediato, use os serviços de emergência locais.',
-    fr: 'Si cela ressemble à une difficulté réelle dans ta vie, parle avec un professionnel de santé mentale ou une personne de confiance. En cas de danger immédiat, utilise les services d’urgence locaux.',
-    de: 'Wenn dir etwas davon als echte Schwierigkeit in deinem Leben bekannt vorkommt, sprich mit einer Fachperson für psychische Gesundheit oder einer vertrauten Person. Bei unmittelbarer Gefahr nutze den örtlichen Notdienst.',
   );
   String get close => _pick(
     es: 'Cerrar',
@@ -824,19 +865,22 @@ class AppLocalizations {
   };
 
   String profileSources(NeuroType type) => switch (type) {
-    NeuroType.tid => 'American Psychiatric Association: Dissociative Disorders',
-    NeuroType.tlp =>
-      'National Institute of Mental Health: Borderline Personality Disorder',
-    NeuroType.toc =>
-      'National Institute of Mental Health: Obsessive-Compulsive Disorder',
-    NeuroType.tdah => 'National Institute of Mental Health: ADHD',
-    NeuroType.tag => 'National Institute of Mental Health: Anxiety Disorders',
+    NeuroType.tdah =>
+      'National Institute of Mental Health (NIMH) - Attention-Deficit/Hyperactivity Disorder (ADHD)\nhttps://www.nimh.nih.gov/health/topics/attention-deficit-hyperactivity-disorder-adhd',
     NeuroType.tea =>
-      'National Institute of Mental Health: Autism Spectrum Disorder',
+      'National Institute of Mental Health (NIMH) - Autism Spectrum Disorder\nhttps://www.nimh.nih.gov/health/topics/autism-spectrum-disorders-asd\n\nCenters for Disease Control and Prevention (CDC) - About Autism Spectrum Disorder\nhttps://www.cdc.gov/autism/about/index.html',
+    NeuroType.tlp =>
+      'National Institute of Mental Health (NIMH) - Borderline Personality Disorder\nhttps://www.nimh.nih.gov/health/topics/borderline-personality-disorder',
+    NeuroType.tid =>
+      'NCBI Bookshelf / StatPearls - Dissociative Identity Disorder\nhttps://www.ncbi.nlm.nih.gov/books/NBK568768/',
+    NeuroType.toc =>
+      'National Institute of Mental Health (NIMH) - Obsessive-Compulsive Disorder (OCD)\nhttps://www.nimh.nih.gov/health/topics/obsessive-compulsive-disorder-ocd',
     NeuroType.alexitimia =>
-      'Contenido educativo general; revisar con profesionales de salud mental.',
+      'Merriam-Webster Medical Dictionary - Alexithymia\nhttps://www.merriam-webster.com/medical/alexithymia\n\nPMC / Frontiers in Psychology - Conceptualizing Alexithymia\nhttps://pmc.ncbi.nlm.nih.gov/articles/PMC7005782/',
     NeuroType.anhedonia =>
-      'Contenido educativo general; revisar con profesionales de salud mental.',
+      'PMC / Nursing Forum - Anhedonia: A Concept Analysis\nhttps://pmc.ncbi.nlm.nih.gov/articles/PMC3664836/',
+    NeuroType.tag =>
+      'National Institute of Mental Health (NIMH) - Generalized Anxiety Disorder\nhttps://www.nimh.nih.gov/health/publications/generalized-anxiety-disorder-gad\n\nNational Institute of Mental Health (NIMH) - Anxiety Disorders\nhttps://www.nimh.nih.gov/health/topics/anxiety-disorders',
   };
 }
 

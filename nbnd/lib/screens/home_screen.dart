@@ -23,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   NeuroType _selected = NeuroType.tdah;
   GameSettings _settings = const GameSettings();
   int _bestScore = 0;
+  bool _assetsPrecached = false;
 
   @override
   void initState() {
@@ -35,6 +36,27 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _powerController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_assetsPrecached) return;
+    _assetsPrecached = true;
+    precacheImage(
+      const AssetImage('assets/images/character_placeholder.png'),
+      context,
+    );
+    for (final String spoonAsset in const <String>[
+      'assets/images/spoons/spoon_full.png',
+      'assets/images/spoons/spoon_half.png',
+      'assets/images/spoons/spoon_empty.png',
+    ]) {
+      precacheImage(AssetImage(spoonAsset), context);
+    }
+    for (final NeuroType type in NeuroType.values) {
+      precacheImage(AssetImage(type.iconAsset), context);
+    }
   }
 
   Future<void> _loadPreferences() async {
@@ -275,6 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             profile: profile,
                             selected: selected,
                             initialReserveLabel: t.initialReserve,
+                            recommendedStartLabel: t.recommendedStart,
                             onInfo: () => _openProfileInfo(type),
                             onTap: () => _select(type),
                           ),
@@ -322,6 +345,7 @@ class _PowerCard extends StatelessWidget {
     required this.profile,
     required this.selected,
     required this.initialReserveLabel,
+    required this.recommendedStartLabel,
     required this.onInfo,
     required this.onTap,
   });
@@ -330,8 +354,11 @@ class _PowerCard extends StatelessWidget {
   final NeuroPowerProfile profile;
   final bool selected;
   final String initialReserveLabel;
+  final String recommendedStartLabel;
   final VoidCallback onInfo;
   final VoidCallback onTap;
+
+  bool get _recommendedStart => type == NeuroType.tdah || type == NeuroType.tag;
 
   @override
   Widget build(BuildContext context) {
@@ -407,11 +434,44 @@ class _PowerCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            '$initialReserveLabel: ${profile.maxSpoonHalves ~/ 2} cucharas',
+                            '$initialReserveLabel: ${AppLocalizations.of(context).spoonsCount(profile.maxSpoonHalves ~/ 2)}',
                             style: Theme.of(
                               context,
                             ).textTheme.labelSmall?.copyWith(color: type.color),
                           ),
+                          if (_recommendedStart) ...<Widget>[
+                            const SizedBox(height: 6),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: type.color.withValues(alpha: .14),
+                                  border: Border.all(
+                                    color: type.color.withValues(alpha: .45),
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  child: Text(
+                                    recommendedStartLabel,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(
+                                          color: type.color,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),

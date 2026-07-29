@@ -8,6 +8,8 @@ class AppStorage {
   AppStorage._();
 
   static final AppStorage instance = AppStorage._();
+  static const int _schemaVersion = 1;
+  static const String _schemaVersionKey = 'schema_version';
 
   Map<String, Object?>? _cache;
   Future<void> _writeQueue = Future<void>.value();
@@ -21,20 +23,31 @@ class AppStorage {
     if (_cache != null) return _cache!;
     final File file = await _file();
     if (!await file.exists()) {
-      _cache = <String, Object?>{};
+      _cache = _withCurrentSchema(<String, Object?>{});
       return _cache!;
     }
     final Object? decoded = jsonDecode(await file.readAsString());
-    _cache = decoded is Map
+    final Map<String, Object?> data = decoded is Map
         ? decoded.map<String, Object?>(
             (Object? key, Object? value) => MapEntry(key.toString(), value),
           )
         : <String, Object?>{};
+    _cache = _withCurrentSchema(data);
     return _cache!;
+  }
+
+  Future<void> initialize() async {
+    await _load();
+  }
+
+  Map<String, Object?> _withCurrentSchema(Map<String, Object?> data) {
+    data[_schemaVersionKey] = _schemaVersion;
+    return data;
   }
 
   Future<void> _save(Map<String, Object?> data) async {
     final File file = await _file();
+    _withCurrentSchema(data);
     await file.writeAsString(jsonEncode(data), flush: true);
     _cache = Map<String, Object?>.from(data);
   }

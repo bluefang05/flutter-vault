@@ -39,6 +39,10 @@ class NbndGame extends FlameGame {
   final List<ObstacleRing> _rings = <ObstacleRing>[];
   final List<SpoonOrb> _spoonOrbs = <SpoonOrb>[];
   final Queue<_GameSnapshot> _history = Queue<_GameSnapshot>();
+  final Paint _ringPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.square;
+  final Path _ringPath = Path();
 
   GameRunState _state = GameRunState.ready;
   double _elapsed = 0;
@@ -76,18 +80,27 @@ class NbndGame extends FlameGame {
   double get _ringThickness => 15;
   double get _minimumRingSeparation => math.max(112, _playerRadius * 1.55);
   int get score => (_elapsed * 100).floor() + _scoreBonus;
-  List<ObstacleRing> get _tocCandidates => _rings
-      .where(
-        (ObstacleRing ring) =>
-            !ring.resolved &&
-            ring.radius + ring.thickness / 2 >= _playerRadius - 18,
-      )
-      .toList(growable: false);
+  int get _tocCandidateCount {
+    int count = 0;
+    for (final ObstacleRing ring in _rings) {
+      if (_isTocCandidate(ring)) count++;
+    }
+    return count;
+  }
+
+  int get _activeRingCount {
+    int count = 0;
+    for (final ObstacleRing ring in _rings) {
+      if (!ring.resolved) count++;
+    }
+    return count;
+  }
+
   bool get _abilityHasEffect => abilityHasEffect(
     neuroType: neuroType,
     targetCount: neuroType == NeuroType.toc
-        ? _tocCandidates.length
-        : _rings.where((ObstacleRing ring) => !ring.resolved).length,
+        ? _tocCandidateCount
+        : _activeRingCount,
     historyCount: _history.length,
   );
   bool get canActivateAbility =>
@@ -190,15 +203,8 @@ class NbndGame extends FlameGame {
         _powerImmunityUntil = _elapsed + .65;
         break;
       case NeuroType.toc:
-        final List<ObstacleRing> candidates = _tocCandidates;
-        if (candidates.isNotEmpty) {
-          final ObstacleRing nearest = candidates.reduce(
-            (ObstacleRing a, ObstacleRing b) =>
-                (a.radius - _playerRadius).abs() <
-                    (b.radius - _playerRadius).abs()
-                ? a
-                : b,
-          );
+        final ObstacleRing? nearest = _nearestTocCandidate();
+        if (nearest != null) {
           nearest.gapCenters[0] = _playerAngle;
           nearest.gapWidth = math.max(nearest.gapWidth, math.pi / 2.7);
         }
@@ -322,16 +328,40 @@ class NbndGame extends FlameGame {
 
   double get _nextOrbDelay => 18 + _random.nextDouble() * 10;
 
-  bool get _canSpawnRing => hasMinimumRingSeparation(
-    spawnRadius: _outerSpawnRadius,
-    spawnThickness: _ringThickness,
-    existingOuterEdges: _rings
-        .where((ObstacleRing ring) => !ring.resolved)
-        .map((ObstacleRing ring) => ring.radius + ring.thickness / 2),
-    minimumSeparation: _minimumRingSeparation,
-  );
+  bool get _canSpawnRing {
+    final double spawnInnerEdge = _outerSpawnRadius - _ringThickness / 2;
+    double? outermostExistingEdge;
+    for (final ObstacleRing ring in _rings) {
+      if (ring.resolved) continue;
+      final double outerEdge = ring.radius + ring.thickness / 2;
+      outermostExistingEdge = outermostExistingEdge == null
+          ? outerEdge
+          : math.max(outermostExistingEdge, outerEdge);
+    }
+    return outermostExistingEdge == null ||
+        spawnInnerEdge - outermostExistingEdge >= _minimumRingSeparation;
+  }
 
   String get _stage => DifficultyCurve.stage(_elapsed);
+
+  bool _isTocCandidate(ObstacleRing ring) {
+    return !ring.resolved &&
+        ring.radius + ring.thickness / 2 >= _playerRadius - 18;
+  }
+
+  ObstacleRing? _nearestTocCandidate() {
+    ObstacleRing? nearest;
+    double nearestDistance = double.infinity;
+    for (final ObstacleRing ring in _rings) {
+      if (!_isTocCandidate(ring)) continue;
+      final double distance = (ring.radius - _playerRadius).abs();
+      if (distance < nearestDistance) {
+        nearest = ring;
+        nearestDistance = distance;
+      }
+    }
+    return nearest;
+  }
 
   void _spawnRing() {
     final double gapWidth = math.max(
@@ -854,9 +884,13 @@ class NbndGame extends FlameGame {
 
   void _drawPreview(Canvas canvas, Offset center) {
     if (neuroType != NeuroType.tea && neuroType != NeuroType.tag) return;
-    final ObstacleRing? previewRing = _rings
-        .where((ObstacleRing ring) => ring.radius > _playerRadius)
-        .firstOrNull;
+    ObstacleRing? previewRing;
+    for (final ObstacleRing ring in _rings) {
+      if (ring.radius > _playerRadius) {
+        previewRing = ring;
+        break;
+      }
+    }
     if (previewRing == null) return;
     final double gap = previewRing.gapCenters.first;
     final Paint paint = Paint()
@@ -873,19 +907,19 @@ class NbndGame extends FlameGame {
 
   void _drawRing(Canvas canvas, Offset center, ObstacleRing ring) {
     const int slices = 96;
-    final Paint paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.square
+    final Paint paint = _ringPaint
       ..strokeWidth = ring.thickness
       ..color = _ringColor(ring);
     final Rect rect = Rect.fromCircle(center: center, radius: ring.radius);
     final double slice = math.pi * 2 / slices;
+    _ringPath.reset();
     for (int index = 0; index < slices; index++) {
       final double angle = index * slice;
       if (!ring.isAngleSafe(angle + slice / 2)) {
-        canvas.drawArc(rect, angle, slice * 1.08, false, paint);
+        _ringPath.addArc(rect, angle, slice * 1.08);
       }
     }
+    canvas.drawPath(_ringPath, paint);
   }
 
   Color _ringColor(ObstacleRing ring) {
@@ -1036,8 +1070,4 @@ class _OrbSnapshot {
   final double inwardSpeed;
   final double angularSpeed;
   final bool resolved;
-}
-
-extension _FirstOrNull<T> on Iterable<T> {
-  T? get firstOrNull => isEmpty ? null : first;
 }
