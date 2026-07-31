@@ -74,6 +74,15 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    precacheImage(
+      const AssetImage('assets/images/gameplay/new_record_badge.png'),
+      context,
+    );
+  }
+
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _pointerTracker.clear();
@@ -246,6 +255,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                           highlight: _lastRunWasRecord
                               ? t.newRecordTitle
                               : null,
+                          recordBadgeAsset: _lastRunWasRecord
+                              ? 'assets/images/gameplay/new_record_badge.png'
+                              : null,
                           action: t.retry,
                           secondaryAction: t.backToMenu,
                           onSecondaryPressed: () {
@@ -309,22 +321,18 @@ class _Hud extends StatelessWidget {
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 180),
                           child: Text(
-                            hud.recovering
-                                ? t.spoonRecovered
-                                : hud.breathing
+                            hud.breathing
                                 ? t.breathingMoment
                                 : t.flowLine(
                                     hud.cleanPasses,
                                     hud.flowMultiplier,
                                   ),
                             key: ValueKey<String>(
-                              '${hud.recovering}-${hud.breathing}-${hud.cleanPasses}',
+                              '${hud.breathing}-${hud.cleanPasses}',
                             ),
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(
-                                  color: hud.recovering
-                                      ? const Color(0xFFFFD45C)
-                                      : hud.breathing
+                                  color: hud.breathing
                                       ? Colors.white70
                                       : neuroType.color,
                                 ),
@@ -373,6 +381,7 @@ class _MessageOverlay extends StatelessWidget {
     required this.action,
     required this.onPressed,
     this.highlight,
+    this.recordBadgeAsset,
     this.secondaryAction,
     this.onSecondaryPressed,
   });
@@ -382,19 +391,26 @@ class _MessageOverlay extends StatelessWidget {
   final String action;
   final VoidCallback onPressed;
   final String? highlight;
+  final String? recordBadgeAsset;
   final String? secondaryAction;
   final VoidCallback? onSecondaryPressed;
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Colors.black54,
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: RadialGradient(
+          radius: 1.08,
+          colors: <Color>[Color(0xB0090A12), Color(0xE8050610)],
+        ),
+      ),
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Card(
+            color: const Color(0xF20B0E18),
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
@@ -407,58 +423,82 @@ class _MessageOverlay extends StatelessWidget {
                           (BuildContext context, double scale, Widget? child) {
                             return Transform.scale(scale: scale, child: child);
                           },
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: <Color>[
-                              Color(0xFFFFD45C),
-                              Color(0xFFFF8A5C),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: <BoxShadow>[
-                            BoxShadow(
-                              color: const Color(
-                                0xFFFFD45C,
-                              ).withValues(alpha: .26),
-                              blurRadius: 18,
-                              spreadRadius: 2,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          if (recordBadgeAsset != null)
+                            Image.asset(
+                              recordBadgeAsset!,
+                              height: 124,
+                              fit: BoxFit.contain,
                             ),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              const Icon(
-                                Icons.emoji_events_rounded,
-                                color: Color(0xFF1B1320),
-                                size: 20,
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: <Color>[
+                                  Color(0xFFFFD45C),
+                                  Color(0xFFFF8A5C),
+                                ],
                               ),
-                              const SizedBox(width: 7),
-                              Text(
-                                highlight!,
-                                style: Theme.of(context).textTheme.labelLarge
-                                    ?.copyWith(
-                                      color: const Color(0xFF1B1320),
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: .7,
-                                    ),
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: <BoxShadow>[
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFFFFD45C,
+                                  ).withValues(alpha: .26),
+                                  blurRadius: 18,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
                               ),
-                            ],
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  const Icon(
+                                    Icons.emoji_events_rounded,
+                                    color: Color(0xFF1B1320),
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 7),
+                                  Text(
+                                    highlight!,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelLarge
+                                        ?.copyWith(
+                                          color: const Color(0xFF1B1320),
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: .7,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 14),
                   ],
-                  Text(title, style: Theme.of(context).textTheme.headlineSmall),
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Text(message, textAlign: TextAlign.center),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.white.withValues(alpha: .78),
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   FilledButton(onPressed: onPressed, child: Text(action)),
                   if (secondaryAction != null &&

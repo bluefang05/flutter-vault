@@ -1,4 +1,4 @@
-package com.example.grapa
+package com.enmanuelapps.grapa
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -66,12 +66,15 @@ class NbndGame extends FlameGame {
   double _orbRecoveryUntil = 0;
   double _abilityFeedbackUntil = 0;
   double _rewindFeedbackUntil = 0;
+  double _hitShockwaveUntil = 0;
+  double _orbCollectFeedbackUntil = 0;
   late double _orbSpawnTimer;
   int _sequenceIndex = 0;
   int _cleanPasses = 0;
   int _scoreBonus = 0;
   late int _spoonHalves;
   ui.Image? _powerIcon;
+  ui.Image? _backgroundImage;
   bool _gameOverSent = false;
 
   double get _playerRadius => math.min(size.x, size.y) * .19;
@@ -112,6 +115,9 @@ class NbndGame extends FlameGame {
   Future<void> onLoad() async {
     await super.onLoad();
     _powerIcon = await images.load(neuroType.flameIconAsset);
+    _backgroundImage = await images.load(
+      'backgrounds/nbnd_gameplay_vortex.png',
+    );
   }
 
   void start() {
@@ -143,6 +149,8 @@ class NbndGame extends FlameGame {
     _orbRecoveryUntil = 0;
     _abilityFeedbackUntil = 0;
     _rewindFeedbackUntil = 0;
+    _hitShockwaveUntil = 0;
+    _orbCollectFeedbackUntil = 0;
     _orbSpawnTimer = _nextOrbDelay;
     _sequenceIndex = 0;
     _cleanPasses = 0;
@@ -437,6 +445,7 @@ class NbndGame extends FlameGame {
     );
     _scoreBonus += _spoonHalves > previousHalves ? 120 : 40;
     _orbRecoveryUntil = _elapsed + 1.1;
+    _orbCollectFeedbackUntil = _elapsed + .68;
     orb.resolved = true;
     SfxPlayer.instance.playSpoonCollected();
     if (settings.haptics) {
@@ -522,6 +531,7 @@ class NbndGame extends FlameGame {
     if (!settings.reducedFlashes) {
       _hitFlashUntil = _elapsed + .22;
     }
+    _hitShockwaveUntil = _elapsed + (strongHit ? .54 : .42);
     _shakeUntil = _elapsed + (strongHit ? .38 : .26);
     _shakeStrength = strongHit ? 8 : 5;
     if (settings.haptics) {
@@ -698,11 +708,7 @@ class NbndGame extends FlameGame {
 
     final Offset center = Offset(size.x / 2, size.y / 2);
     final Rect fullRect = Offset.zero & Size(size.x, size.y);
-    final Paint background = Paint()
-      ..shader = RadialGradient(
-        colors: <Color>[Color(0xFF17182B), Color(0xFF070811)],
-      ).createShader(fullRect);
-    canvas.drawRect(fullRect, background);
+    _drawBackground(canvas, fullRect);
 
     super.render(canvas);
 
@@ -711,7 +717,9 @@ class NbndGame extends FlameGame {
     canvas.translate(shakeOffset.dx, shakeOffset.dy);
 
     _drawGrid(canvas, center);
+    _drawHitShockwave(canvas, center);
     _drawCore(canvas, center);
+    _drawAbilityBurst(canvas, center);
     _drawRewindFeedback(canvas, center);
     _drawPreview(canvas, center);
     for (final ObstacleRing ring in _rings) {
@@ -720,6 +728,7 @@ class NbndGame extends FlameGame {
     for (final SpoonOrb orb in _spoonOrbs) {
       _drawSpoonOrb(canvas, center, orb);
     }
+    _drawSpoonCollectFeedback(canvas, center);
     _drawPlayer(canvas, center);
 
     if (_elapsed < _hitFlashUntil) {
@@ -731,6 +740,60 @@ class NbndGame extends FlameGame {
       );
     }
     canvas.restore();
+  }
+
+  void _drawBackground(Canvas canvas, Rect fullRect) {
+    final Paint base = Paint()
+      ..shader = RadialGradient(
+        colors: <Color>[Color(0xFF17182B), Color(0xFF070811)],
+      ).createShader(fullRect);
+    canvas.drawRect(fullRect, base);
+
+    final ui.Image? image = _backgroundImage;
+    if (image == null) return;
+
+    final Size imageSize = Size(
+      image.width.toDouble(),
+      image.height.toDouble(),
+    );
+    final double scale = math.max(
+      fullRect.width / imageSize.width,
+      fullRect.height / imageSize.height,
+    );
+    final Size sourceSize = Size(
+      fullRect.width / scale,
+      fullRect.height / scale,
+    );
+    final Rect source = Rect.fromCenter(
+      center: Offset(imageSize.width / 2, imageSize.height / 2),
+      width: sourceSize.width,
+      height: sourceSize.height,
+    );
+    canvas.drawImageRect(
+      image,
+      source,
+      fullRect,
+      Paint()
+        ..filterQuality = FilterQuality.medium
+        ..color = const Color(0xE6FFFFFF)
+        ..colorFilter = const ColorFilter.mode(
+          Color(0xE6FFFFFF),
+          BlendMode.modulate,
+        ),
+    );
+    canvas.drawRect(
+      fullRect,
+      Paint()
+        ..shader = RadialGradient(
+          radius: .72,
+          colors: <Color>[
+            const Color(0xFF050711).withValues(alpha: .42),
+            const Color(0xFF050711).withValues(alpha: .08),
+            const Color(0xFF050711).withValues(alpha: .00),
+          ],
+          stops: const <double>[0, .58, 1],
+        ).createShader(fullRect),
+    );
   }
 
   Offset _cameraShakeOffset() {
@@ -866,6 +929,48 @@ class NbndGame extends FlameGame {
     }
   }
 
+  void _drawAbilityBurst(Canvas canvas, Offset center) {
+    if (_elapsed >= _abilityFeedbackUntil) return;
+    final double progress =
+        1 - ((_abilityFeedbackUntil - _elapsed) / .42).clamp(0.0, 1.0);
+    final double alpha = settings.reducedFlashes
+        ? (1 - progress) * .14
+        : (1 - progress) * .30;
+    final Paint paint = Paint()
+      ..color = neuroType.color.withValues(alpha: alpha)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 3.5 * (1 - progress) + 1;
+    final double radius = _playerRadius * (.48 + progress * 1.2);
+    for (int index = 0; index < 8; index++) {
+      final double angle = index * math.pi / 4 + progress * .28;
+      final Offset start =
+          center + Offset(math.cos(angle), math.sin(angle)) * radius;
+      final Offset end =
+          center + Offset(math.cos(angle), math.sin(angle)) * (radius + 24);
+      canvas.drawLine(start, end, paint);
+    }
+    canvas.drawCircle(center, radius + 8, paint);
+  }
+
+  void _drawHitShockwave(Canvas canvas, Offset center) {
+    if (_elapsed >= _hitShockwaveUntil) return;
+    final double duration = settings.reducedFlashes ? .42 : .54;
+    final double progress =
+        1 - ((_hitShockwaveUntil - _elapsed) / duration).clamp(0.0, 1.0);
+    final double alpha = settings.reducedFlashes
+        ? (1 - progress) * .10
+        : (1 - progress) * .24;
+    canvas.drawCircle(
+      center,
+      _playerRadius * (.82 + progress * 1.9),
+      Paint()
+        ..color = const Color(0xFFFF5F7A).withValues(alpha: alpha)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6 * (1 - progress) + 1,
+    );
+  }
+
   void _drawRewindFeedback(Canvas canvas, Offset center) {
     if (_elapsed >= _rewindFeedbackUntil) return;
     final double progress =
@@ -956,6 +1061,29 @@ class NbndGame extends FlameGame {
     );
     canvas.drawCircle(position, 8, Paint()..color = const Color(0xFFFFD45C));
     canvas.drawCircle(position, 3, Paint()..color = const Color(0xFFFFFFFF));
+  }
+
+  void _drawSpoonCollectFeedback(Canvas canvas, Offset center) {
+    if (_elapsed >= _orbCollectFeedbackUntil) return;
+    final double progress =
+        1 - ((_orbCollectFeedbackUntil - _elapsed) / .68).clamp(0.0, 1.0);
+    final double alpha = settings.reducedFlashes
+        ? (1 - progress) * .12
+        : (1 - progress) * .28;
+    final Paint paint = Paint()
+      ..color = const Color(0xFFFFD45C).withValues(alpha: alpha)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 3 * (1 - progress) + 1;
+    final double radius = _playerRadius * (.9 + progress * .8);
+    for (int index = 0; index < 10; index++) {
+      final double angle = index * math.pi / 5 - progress * .6;
+      final Offset start =
+          center + Offset(math.cos(angle), math.sin(angle)) * radius;
+      final Offset end =
+          center + Offset(math.cos(angle), math.sin(angle)) * (radius + 12);
+      canvas.drawLine(start, end, paint);
+    }
   }
 
   void _drawPlayer(Canvas canvas, Offset center) {

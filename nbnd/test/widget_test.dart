@@ -37,12 +37,12 @@ void main() {
     await tester.pumpWidget(const NbndApp());
     await tester.pump(const Duration(milliseconds: 300));
 
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -260));
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -360));
     await tester.pump(const Duration(milliseconds: 250));
     await tester.drag(find.bySubtype<PageView>(), const Offset(-320, 0));
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(_profileImage(NeuroType.tea, minWidth: 45), findsWidgets);
+    expect(_profileImage(NeuroType.tea), findsWidgets);
   });
 
   testWidgets('home opens the profile information screen', (

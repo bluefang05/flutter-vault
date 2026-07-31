@@ -72,7 +72,7 @@ class GrapaAssets {
 }
 
 class PinAssets {
-  static const neutral = 'assets/images/pin/pin_01_neutral.png';
+  static const neutral = 'assets/images/pin/pin_11_neutral_limpio.png';
   static const happy = 'assets/images/pin/pin_02_feliz_brazos_arriba.png';
   static const confused = 'assets/images/pin/pin_03_confundido.png';
   static const determined = 'assets/images/pin/pin_04_determinado.png';
@@ -101,8 +101,8 @@ class PinHomeAssets {
       'assets/images/pin_casa/pin_casa_03_casa_premium.png';
   static const bed = 'assets/images/pin_casa/pin_objeto_01_cama.png';
   static const foodBowl =
-      'assets/images/pin_casa/pin_objeto_02_plato_comida.png';
-  static const toy = 'assets/images/pin_casa/pin_objeto_03_juguete.png';
+      'assets/images/pin_casa/pin_objeto_06_bowl_comida_nuevo.png';
+  static const toy = 'assets/images/pin_casa/pin_objeto_07_juguete_varita.png';
   static const lamp = 'assets/images/pin_casa/pin_objeto_04_lampara.png';
   static const rug = 'assets/images/pin_casa/pin_objeto_05_alfombra.png';
 
@@ -114,9 +114,10 @@ class PinHomeAssets {
 }
 
 class PinActionAssets {
-  static const eating = 'assets/images/pin_accion/pin_accion_01_comiendo.png';
+  static const eating =
+      'assets/images/pin_accion/pin_accion_12_comiendo_bowl.png';
   static const sleepingAtHome =
-      'assets/images/pin_accion/pin_accion_02_durmiendo_en_su_casita.png';
+      'assets/images/pin_accion/pin_accion_11_durmiendo_luna.png';
   static const celebratingReward =
       'assets/images/pin_accion/pin_accion_03_celebrando_recompensa.png';
   static const neglectedSad =
@@ -163,16 +164,26 @@ class ScenarioAssets {
       'assets/images/escenarios/escenario_09_taller_de_mejoras.png';
   static const failureScreen =
       'assets/images/escenarios/escenario_10_fondo_pantalla_de_fallo.png';
+  static const cleanPinRoom =
+      'assets/images/escenarios/escenario_11_habitacion_pin_limpia.png';
+  static const cleanRewardShop =
+      'assets/images/escenarios/escenario_12_tienda_limpia.png';
+  static const cleanMissionPath =
+      'assets/images/escenarios/escenario_13_misiones_camino_limpio.png';
+  static const cleanRewardsPath =
+      'assets/images/escenarios/escenario_14_progreso_recompensas_limpio.png';
+  static const sunsetFailurePath =
+      'assets/images/escenarios/escenario_15_fallo_atardecer.png';
 
   static String adventureForProgress(double progress) {
-    if (progress == 0) return procrastinationSwamp;
-    if (progress < 1) return focusForest;
-    return disciplineMountain;
+    if (progress == 0) return sunsetFailurePath;
+    if (progress < 1) return cleanMissionPath;
+    return cleanRewardsPath;
   }
 
   static String pinHomeForHearts(int hearts) {
     if (hearts >= 5) return pinHouseLevel2;
-    if (hearts >= 3) return pinHouseLevel1;
+    if (hearts >= 3) return cleanPinRoom;
     return pinHouseEmpty;
   }
 }
@@ -195,6 +206,18 @@ class UiBrandingAssets {
       'assets/images/ui_branding/ui_09_marco_avatar_grapa.png';
   static const pinAvatarFrame =
       'assets/images/ui_branding/ui_10_marco_avatar_pin.png';
+  static const emptyMissionCard =
+      'assets/images/ui_branding/ui_11_tarjeta_mision_vacia.png';
+  static const fantasyPanel =
+      'assets/images/ui_branding/ui_12_panel_grande_fantasia.png';
+  static const emptyGreenButton =
+      'assets/images/ui_branding/ui_13_boton_verde_vacio.png';
+  static const emptyBlueButton =
+      'assets/images/ui_branding/ui_14_boton_azul_vacio.png';
+  static const emptyProgressBar =
+      'assets/images/ui_branding/ui_15_barra_progreso_vacia.png';
+  static const emptyPurpleBanner =
+      'assets/images/ui_branding/ui_16_banner_morado_vacio.png';
 }
 
 class SacaGrapaAssets {
@@ -212,13 +235,13 @@ class SacaGrapaAssets {
   static const stealingCoins =
       'assets/images/sacagrapa_villano/sacagrapa_villano_01_robando_monedas.png';
   static const blockingMission =
-      'assets/images/sacagrapa_villano/sacagrapa_villano_02_bloqueando_mision.png';
+      'assets/images/sacagrapa_villano/sacagrapa_villano_12_bloqueando_cartel.png';
   static const hiddenInBackground =
       'assets/images/sacagrapa_villano/sacagrapa_villano_03_escondido_en_el_fondo.png';
   static const laughingBehindSadGrapa =
       'assets/images/sacagrapa_villano/sacagrapa_villano_04_riendose_detras_de_grapa_triste.png';
   static const defeated =
-      'assets/images/sacagrapa_villano/sacagrapa_villano_05_derrotado.png';
+      'assets/images/sacagrapa_villano/sacagrapa_villano_11_derrotado_mareado.png';
   static const dizzyByVictory =
       'assets/images/sacagrapa_villano/sacagrapa_villano_06_mareado_por_victoria.png';
   static const breakingStreak =
@@ -248,16 +271,20 @@ class SacaGrapaAssets {
 }
 
 class EconomyAssets {
-  static const coin = 'assets/images/economia/economia_01_moneda_grapa.png';
-  static const gem = 'assets/images/economia/economia_02_gema_azul.png';
-  static const xpStar = 'assets/images/economia/economia_03_estrella_xp.png';
+  static const coin =
+      'assets/images/economia/economia_11_moneda_grapa_nueva.png';
+  static const gem = 'assets/images/economia/economia_12_gema_morada_nueva.png';
+  static const xpStar =
+      'assets/images/economia/economia_13_estrella_xp_nueva.png';
   static const energy = 'assets/images/economia/economia_04_energia_rayo.png';
-  static const streak = 'assets/images/economia/economia_05_racha_fuego.png';
+  static const streak =
+      'assets/images/economia/economia_16_racha_fuego_nueva.png';
+  static const sleepMoon = 'assets/images/economia/economia_17_sueno_luna.png';
   static const commonChest =
-      'assets/images/economia/economia_06_cofre_comun.png';
+      'assets/images/economia/economia_14_cofre_comun_nuevo.png';
   static const rareChest = 'assets/images/economia/economia_07_cofre_raro.png';
   static const legendaryChest =
-      'assets/images/economia/economia_08_cofre_legendario.png';
+      'assets/images/economia/economia_15_cofre_epico_nuevo.png';
   static const missionTicket =
       'assets/images/economia/economia_09_ticket_mision.png';
   static const levelBadge =
@@ -402,19 +429,20 @@ class EffectAssets {
       'assets/images/efectos/efecto_06_mision_fallida.png';
   static const missionCompleted =
       'assets/images/efectos/efecto_07_mision_completada.png';
+  static const brokenHeart = 'assets/images/efectos/efecto_08_corazon_roto.png';
 }
 
 class GrapaActionAssets {
   static const takingNotes =
-      'assets/images/grapa_accion/grapa_accion_01_anotando.png';
+      'assets/images/grapa_accion/grapa_accion_12_checklist.png';
   static const showingMission =
       'assets/images/grapa_accion/grapa_accion_02_mostrando_mision.png';
   static const missionCompleted =
-      'assets/images/grapa_accion/grapa_accion_03_mision_completada.png';
+      'assets/images/grapa_accion/grapa_accion_13_celebrando_confeti.png';
   static const waitingReminder =
       'assets/images/grapa_accion/grapa_accion_04_esperando_recordatorio.png';
   static const pointingButton =
-      'assets/images/grapa_accion/grapa_accion_05_senalando_boton.png';
+      'assets/images/grapa_accion/grapa_accion_11_apuntando_derecha.png';
   static const givingCoins =
       'assets/images/grapa_accion/grapa_accion_06_entregando_monedas.png';
   static const resting =

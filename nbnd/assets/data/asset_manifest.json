@@ -1,5 +1,5 @@
 {
-  "character_placeholder": "assets/images/character_placeholder.png",
+  "character_hero_nbnd": "assets/images/character_hero_nbnd.png",
   "icon_placeholder": "assets/images/icon_placeholder.png",
   "icon_nbnd": "assets/images/icon_nbnd.png",
   "profiles": {
@@ -22,9 +22,15 @@
     "source": "code_generated",
     "description": "Orbe dorado pulsante renderizado por Canvas para respetar el estilo geometrico y el ajuste de destellos."
   },
-  "future_art": {
-    "backgrounds": "assets/images/backgrounds/",
-    "gameplay": "assets/images/gameplay/"
+  "backgrounds": {
+    "home": "assets/images/backgrounds/nbnd_home_vortex.png",
+    "gameplay": "assets/images/backgrounds/nbnd_gameplay_vortex.png"
+  },
+  "gameplay_ui": {
+    "new_record_badge": "assets/images/gameplay/new_record_badge.png",
+    "hit_fx": "code_generated",
+    "power_fx": "code_generated",
+    "spoon_collect_fx": "code_generated"
   },
   "audio": {
     "pulse": "assets/audio/pulse.wav",

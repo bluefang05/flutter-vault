@@ -23,7 +23,7 @@ nitidez en todas las densidades de pantalla.
 
 ## Sustitución recomendada
 
-- `assets/images/character_placeholder.png`: ilustración del personaje NBND.
+- `assets/images/character_hero_nbnd.png`: ilustración principal del personaje NBND.
 - `assets/images/icon_nbnd.png`: icono propuesto de NBND.
 - `assets/images/icon_placeholder.png`: base temporal anterior.
 - `assets/audio/pulse.wav`: pulso o clic de navegación.

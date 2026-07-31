@@ -1,6 +1,12 @@
 # grapa
 
-A new Flutter project.
+Grapa convierte tus habitos y tareas en una aventura personal.
+
+## Android compatibility
+
+Do not raise the Android minimum SDK above 21 in this project.
+
+This app belongs to a Flutter vault where projects are intentionally kept compatible with Android 21+ to support older devices. Flutter or Gradle warnings about raising `minSdkVersion` should be treated as informational unless the project owner explicitly decides to drop Android 21/22 support.
 
 ## Getting Started
 

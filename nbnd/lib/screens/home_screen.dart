@@ -44,7 +44,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_assetsPrecached) return;
     _assetsPrecached = true;
     precacheImage(
-      const AssetImage('assets/images/character_placeholder.png'),
+      const AssetImage('assets/images/backgrounds/nbnd_home_vortex.png'),
+      context,
+    );
+    precacheImage(
+      const AssetImage('assets/images/character_hero_nbnd.png'),
       context,
     );
     for (final String spoonAsset in const <String>[
@@ -185,9 +189,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       fit: StackFit.expand,
                       children: <Widget>[
                         Image.asset(
-                          'assets/images/character_placeholder.png',
+                          'assets/images/backgrounds/nbnd_home_vortex.png',
                           fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                        ),
+                        Image.asset(
+                          'assets/images/character_hero_nbnd.png',
+                          fit: BoxFit.contain,
                           alignment: const Alignment(0, -.22),
+                          color: const Color(0xFFFFFFFF),
+                          colorBlendMode: BlendMode.modulate,
                         ),
                         const DecoratedBox(
                           decoration: BoxDecoration(
@@ -270,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             SliverToBoxAdapter(
               child: SizedBox(
-                height: 212,
+                height: 252,
                 child: Stack(
                   alignment: Alignment.center,
                   children: <Widget>[
@@ -368,7 +379,7 @@ class _PowerCard extends StatelessWidget {
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
           decoration: BoxDecoration(
             border: Border.all(
               color: selected ? type.color : Colors.transparent,
@@ -392,10 +403,10 @@ class _PowerCard extends StatelessWidget {
                   children: <Widget>[
                     NeuroProfileIcon(
                       neuroType: type,
-                      size: 58,
+                      size: 52,
                       selected: selected,
                     ),
-                    const SizedBox(width: 13),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -435,6 +446,8 @@ class _PowerCard extends StatelessWidget {
                           const SizedBox(height: 8),
                           Text(
                             '$initialReserveLabel: ${AppLocalizations.of(context).spoonsCount(profile.maxSpoonHalves ~/ 2)}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: Theme.of(
                               context,
                             ).textTheme.labelSmall?.copyWith(color: type.color),
