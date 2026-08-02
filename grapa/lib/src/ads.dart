@@ -3,9 +3,12 @@ part of '../main.dart';
 class _AdMobIds {
   static const _androidReleaseBanner = 'ca-app-pub-3322493998376707/3728365700';
   static const _androidTestBanner = 'ca-app-pub-3940256099942544/6300978111';
+  static const _useTestAdsInRelease = bool.fromEnvironment('USE_TEST_ADS');
+
+  static bool get usingTestAds => !kReleaseMode || _useTestAdsInRelease;
 
   static String get bottomBanner =>
-      kReleaseMode ? _androidReleaseBanner : _androidTestBanner;
+      usingTestAds ? _androidTestBanner : _androidReleaseBanner;
 }
 
 class _BottomBannerAd extends StatefulWidget {
@@ -18,6 +21,7 @@ class _BottomBannerAd extends StatefulWidget {
 class _BottomBannerAdState extends State<_BottomBannerAd> {
   BannerAd? _bannerAd;
   bool _isLoaded = false;
+  bool _failedToLoad = false;
 
   @override
   void initState() {
@@ -34,7 +38,6 @@ class _BottomBannerAdState extends State<_BottomBannerAd> {
   @override
   Widget build(BuildContext context) {
     final bannerAd = _bannerAd;
-    if (!_isLoaded || bannerAd == null) return const SizedBox.shrink();
 
     return ColoredBox(
       color: const Color(0xFFFFFCF6),
@@ -42,9 +45,17 @@ class _BottomBannerAdState extends State<_BottomBannerAd> {
         top: false,
         bottom: false,
         child: SizedBox(
-          width: bannerAd.size.width.toDouble(),
-          height: bannerAd.size.height.toDouble(),
-          child: Center(child: AdWidget(ad: bannerAd)),
+          width: double.infinity,
+          height: AdSize.banner.height.toDouble(),
+          child: Center(
+            child: _isLoaded && bannerAd != null
+                ? SizedBox(
+                    width: bannerAd.size.width.toDouble(),
+                    height: bannerAd.size.height.toDouble(),
+                    child: AdWidget(ad: bannerAd),
+                  )
+                : _BannerAdPlaceholder(failedToLoad: _failedToLoad),
+          ),
         ),
       ),
     );
@@ -61,15 +72,53 @@ class _BottomBannerAdState extends State<_BottomBannerAd> {
             ad.dispose();
             return;
           }
-          setState(() => _isLoaded = true);
+          setState(() {
+            _isLoaded = true;
+            _failedToLoad = false;
+          });
         },
         onAdFailedToLoad: (ad, error) {
           ad.dispose();
-          if (mounted) setState(() => _isLoaded = false);
+          debugPrint('Grapa AdMob banner failed to load: $error');
+          if (mounted) {
+            setState(() {
+              _bannerAd = null;
+              _isLoaded = false;
+              _failedToLoad = true;
+            });
+          }
         },
       ),
     );
     _bannerAd = bannerAd;
     bannerAd.load();
+  }
+}
+
+class _BannerAdPlaceholder extends StatelessWidget {
+  const _BannerAdPlaceholder({required this.failedToLoad});
+
+  final bool failedToLoad;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF4EFE6),
+        border: Border(
+          top: BorderSide(color: const Color(0xFFE1D8CA).withValues(alpha: .8)),
+        ),
+      ),
+      child: Center(
+        child: Text(
+          failedToLoad ? 'Publicidad no disponible' : 'Publicidad',
+          style: const TextStyle(
+            color: Color(0xFF81786C),
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
   }
 }
