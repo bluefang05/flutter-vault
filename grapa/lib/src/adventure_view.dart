@@ -56,12 +56,28 @@ class _AdventureView extends StatelessWidget {
             children: [
               Positioned(
                 top: 26,
-                child: Text(
-                  'SENDERO DE LA CONSTANCIA',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.2,
+                left: 20,
+                right: 20,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 9,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF201A25).withValues(alpha: .72),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: const Text(
+                      'SENDERO DE LA CONSTANCIA',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
                   ),
                 ),
               ),
