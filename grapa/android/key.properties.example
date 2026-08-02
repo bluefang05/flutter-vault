@@ -1,0 +1,4 @@
+storePassword=CAMBIAR
+keyPassword=CAMBIAR
+keyAlias=grapa
+storeFile=RUTA_ABSOLUTA_AL_ARCHIVO_JKS

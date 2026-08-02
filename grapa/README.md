@@ -8,6 +8,10 @@ Do not raise the Android minimum SDK above 21 in this project.
 
 This app belongs to a Flutter vault where projects are intentionally kept compatible with Android 21+ to support older devices. Flutter or Gradle warnings about raising `minSdkVersion` should be treated as informational unless the project owner explicitly decides to drop Android 21/22 support.
 
+## Android release signing
+
+Release builds read private signing values from `android/key.properties`. Start from `android/key.properties.example`; the real file and keystore are ignored by Git. Without that private file, release artifacts are intentionally left unsigned instead of using the debug key.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
