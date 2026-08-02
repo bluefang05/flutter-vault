@@ -240,6 +240,33 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         Positioned(
+                          top: 18,
+                          left: 16,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 220),
+                            child: Text(
+                              _selected.code,
+                              key: ValueKey<String>(
+                                'hero-code-${_selected.code}',
+                              ),
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
+                                    color: _selected.color,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.2,
+                                    shadows: <Shadow>[
+                                      Shadow(
+                                        color: _selected.color.withValues(
+                                          alpha: .42,
+                                        ),
+                                        blurRadius: 16,
+                                      ),
+                                    ],
+                                  ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
                           left: 16,
                           right: 16,
                           bottom: 14,
@@ -397,123 +424,93 @@ class _PowerCard extends StatelessWidget {
           child: Stack(
             children: <Widget>[
               Padding(
-                padding: const EdgeInsets.only(right: 72),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                padding: const EdgeInsets.only(right: 44),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    NeuroProfileIcon(
-                      neuroType: type,
-                      size: 52,
-                      selected: selected,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            AppLocalizations.of(context).neuroTypeName(type),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  height: 1.08,
-                                ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            AppLocalizations.of(context).powerName(type),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(
-                              context,
-                            ).textTheme.labelLarge?.copyWith(color: type.color),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            AppLocalizations.of(context).neuroDescription(type),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '$initialReserveLabel: ${AppLocalizations.of(context).spoonsCount(profile.maxSpoonHalves ~/ 2)}',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(
-                              context,
-                            ).textTheme.labelSmall?.copyWith(color: type.color),
-                          ),
-                          if (_recommendedStart) ...<Widget>[
-                            const SizedBox(height: 6),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  color: type.color.withValues(alpha: .14),
-                                  border: Border.all(
-                                    color: type.color.withValues(alpha: .45),
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  child: Text(
-                                    recommendedStartLabel,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall
-                                        ?.copyWith(
-                                          color: type.color,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
+                    Text(
+                      AppLocalizations.of(context).neuroTypeName(type),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        height: 1.08,
                       ),
                     ),
+                    const SizedBox(height: 5),
+                    Text(
+                      AppLocalizations.of(context).powerName(type),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelLarge?.copyWith(color: type.color),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      AppLocalizations.of(context).neuroDescription(type),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '$initialReserveLabel: ${AppLocalizations.of(context).spoonsCount(profile.maxSpoonHalves ~/ 2)}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.copyWith(color: type.color),
+                    ),
+                    if (_recommendedStart) ...<Widget>[
+                      const SizedBox(height: 6),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: type.color.withValues(alpha: .14),
+                            border: Border.all(
+                              color: type.color.withValues(alpha: .45),
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            child: Text(
+                              recommendedStartLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: type.color,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
               Positioned(
                 top: 0,
                 right: 0,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    IconButton(
-                      key: ValueKey<String>('profile-info-${type.code}'),
-                      visualDensity: VisualDensity.compact,
-                      tooltip: AppLocalizations.of(context).learnProfiles,
-                      onPressed: onInfo,
-                      icon: Icon(
-                        Icons.info_outline_rounded,
-                        color: selected ? type.color : Colors.white60,
-                      ),
-                    ),
-                    Icon(
-                      selected
-                          ? Icons.radio_button_checked
-                          : Icons.swipe_rounded,
-                      color: selected ? type.color : Colors.white54,
-                    ),
-                  ],
+                child: IconButton(
+                  key: ValueKey<String>('profile-info-${type.code}'),
+                  visualDensity: VisualDensity.compact,
+                  tooltip: AppLocalizations.of(context).learnProfiles,
+                  onPressed: onInfo,
+                  icon: Icon(
+                    Icons.info_outline_rounded,
+                    color: selected ? type.color : Colors.white60,
+                  ),
                 ),
               ),
             ],

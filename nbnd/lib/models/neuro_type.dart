@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 enum NeuroType {
   tdah,
+  aacc,
   tea,
   tlp,
   tid,
@@ -12,6 +13,7 @@ enum NeuroType {
 
   String get code => switch (this) {
     NeuroType.tdah => 'TDAH',
+    NeuroType.aacc => 'AACC',
     NeuroType.tea => 'TEA',
     NeuroType.tlp => 'TLP',
     NeuroType.tid => 'TID',
@@ -23,6 +25,7 @@ enum NeuroType {
 
   String get powerName => switch (this) {
     NeuroType.tdah => 'Impulso',
+    NeuroType.aacc => 'Alternancia',
     NeuroType.tea => 'Patrón',
     NeuroType.tlp => 'Resonancia',
     NeuroType.tid => 'Perspectivas',
@@ -35,6 +38,8 @@ enum NeuroType {
   String get description => switch (this) {
     NeuroType.tdah =>
       'Movimiento rápido, aperturas breves e hiperfoco que ralentiza el entorno.',
+    NeuroType.aacc =>
+      'Alterna falta de estímulo y ráfagas de activación para sostener el reto.',
     NeuroType.tea =>
       'Patrones más legibles, vista previa y estabilidad frente a cambios bruscos.',
     NeuroType.tlp =>
@@ -53,6 +58,7 @@ enum NeuroType {
 
   Color get color => switch (this) {
     NeuroType.tdah => const Color(0xFFFFA45B),
+    NeuroType.aacc => const Color(0xFFFF4FA3),
     NeuroType.tea => const Color(0xFF59D7FF),
     NeuroType.tlp => const Color(0xFFFF6E9A),
     NeuroType.tid => const Color(0xFFB58CFF),
@@ -66,6 +72,7 @@ enum NeuroType {
 
   String get flameIconAsset => switch (this) {
     NeuroType.tdah => 'profiles/tdah.png',
+    NeuroType.aacc => 'profiles/aacc.png',
     NeuroType.tea => 'profiles/tea.png',
     NeuroType.tlp => 'profiles/tlp.png',
     NeuroType.tid => 'profiles/tid.png',

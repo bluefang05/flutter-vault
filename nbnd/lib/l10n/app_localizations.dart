@@ -459,6 +459,13 @@ class AppLocalizations {
       fr: 'Impulsion',
       de: 'Impuls',
     ),
+    NeuroType.aacc => _pick(
+      es: 'Alternancia',
+      en: 'Alternation',
+      pt: 'Alternancia',
+      fr: 'Alternance',
+      de: 'Wechsel',
+    ),
     NeuroType.tea => _pick(
       es: 'Patrón',
       en: 'Pattern',
@@ -517,6 +524,13 @@ class AppLocalizations {
       pt: 'Transtorno do déficit de atenção e hiperatividade',
       fr: 'Trouble du déficit de l’attention avec hyperactivité',
       de: 'Aufmerksamkeitsdefizit-Hyperaktivitätsstörung',
+    ),
+    NeuroType.aacc => _pick(
+      es: 'Altas capacidades',
+      en: 'High abilities',
+      pt: 'Altas capacidades',
+      fr: 'Haut potentiel',
+      de: 'Hohe Begabung',
     ),
     NeuroType.tea => _pick(
       es: 'Trastorno del espectro autista',
@@ -577,6 +591,13 @@ class AppLocalizations {
       fr: 'Mouvement rapide et hyperfocus qui ralentit l’environnement.',
       de: 'Schnelle Bewegung und Hyperfokus, der die Umgebung verlangsamt.',
     ),
+    NeuroType.aacc => _pick(
+      es: 'Ritmo alternante entre falta de estímulo y activación intensa.',
+      en: 'Alternating rhythm between low stimulation and intense activation.',
+      pt: 'Ritmo alternado entre falta de estímulo e ativação intensa.',
+      fr: 'Rythme alterné entre manque de stimulation et activation intense.',
+      de: 'Wechselnder Rhythmus zwischen Unterforderung und starker Aktivierung.',
+    ),
     NeuroType.tea => _pick(
       es: 'Patrones legibles, vista previa y estabilidad ante cambios bruscos.',
       en: 'Readable patterns, previews, and stability through sudden changes.',
@@ -635,6 +656,13 @@ class AppLocalizations {
       pt: 'O TDAH se associa a padrões persistentes de desatenção, hiperatividade ou impulsividade. Não é falta de interesse nem de esforço.',
       fr: 'Le TDAH est associé à des schémas persistants d’inattention, d’hyperactivité ou d’impulsivité. Ce n’est pas un manque d’intérêt ou d’effort.',
       de: 'ADHS ist mit anhaltenden Mustern von Unaufmerksamkeit, Hyperaktivität oder Impulsivität verbunden. Es ist kein Mangel an Interesse oder Anstrengung.',
+    ),
+    NeuroType.aacc => _pick(
+      es: 'Las altas capacidades describen perfiles con aprendizaje rápido, pensamiento complejo o alta sensibilidad al reto. No son una garantía de bienestar ni de facilidad.',
+      en: 'High abilities describe profiles with fast learning, complex thinking, or high sensitivity to challenge. They do not guarantee ease or wellbeing.',
+      pt: 'Altas capacidades descrevem perfis com aprendizagem rápida, pensamento complexo ou alta sensibilidade ao desafio. Não garantem facilidade nem bem-estar.',
+      fr: 'Le haut potentiel décrit des profils avec apprentissage rapide, pensée complexe ou forte sensibilité au défi. Il ne garantit ni facilité ni bien-être.',
+      de: 'Hohe Begabung beschreibt Profile mit schnellem Lernen, komplexem Denken oder hoher Sensibilität für Herausforderung. Sie garantiert weder Leichtigkeit noch Wohlbefinden.',
     ),
     NeuroType.tea => _pick(
       es: 'El espectro autista reúne formas diversas de procesar comunicación, estímulos, rutinas e intereses. Puede incluir fortalezas y necesidades de apoyo distintas en cada persona.',
@@ -695,6 +723,13 @@ class AppLocalizations {
       fr: 'Cela peut ressembler à passer d’un stimulus à l’autre, perdre le fil ou entrer parfois dans une concentration très intense.',
       de: 'Es kann sich anfühlen wie ein Springen zwischen Reizen, den Faden verlieren oder zeitweise sehr intensive Konzentration.',
     ),
+    NeuroType.aacc => _pick(
+      es: 'Puede sentirse como necesitar reto constante: si todo va lento aparece aburrimiento, y cuando llega estímulo suficiente el ritmo sube de golpe.',
+      en: 'It can feel like needing constant challenge: when things are too slow boredom appears, and enough stimulation can raise the rhythm suddenly.',
+      pt: 'Pode parecer precisar de desafio constante: quando tudo vai devagar demais surge tédio, e estímulo suficiente acelera o ritmo de repente.',
+      fr: 'Cela peut ressembler à un besoin de défi constant : quand tout va trop lentement, l’ennui apparaît, puis une stimulation suffisante accélère soudain le rythme.',
+      de: 'Es kann sich wie ein Bedürfnis nach ständiger Herausforderung anfühlen: Ist alles zu langsam, entsteht Langeweile; genug Reiz lässt das Tempo plötzlich steigen.',
+    ),
     NeuroType.tea => _pick(
       es: 'Puede sentirse como necesitar previsibilidad, notar patrones con mucha precisión o saturarse ante cambios y estímulos intensos.',
       en: 'It can feel like needing predictability, noticing patterns precisely, or becoming overwhelmed by change and intense stimuli.',
@@ -753,6 +788,13 @@ class AppLocalizations {
       pt: 'Não significa falta de interesse ou esforço.',
       fr: 'Cela ne signifie pas un manque d’intérêt ou d’effort.',
       de: 'Es bedeutet keinen Mangel an Interesse oder Anstrengung.',
+    ),
+    NeuroType.aacc => _pick(
+      es: 'No significa superioridad ni que la persona no necesite apoyo.',
+      en: 'It does not mean superiority or that the person needs no support.',
+      pt: 'Não significa superioridade nem que a pessoa não precise de apoio.',
+      fr: 'Cela ne signifie pas supériorité ni absence de besoin de soutien.',
+      de: 'Es bedeutet keine Überlegenheit und nicht, dass die Person keine Unterstützung braucht.',
     ),
     NeuroType.tea => _pick(
       es: 'No significa falta de sentimientos.',
@@ -813,6 +855,13 @@ class AppLocalizations {
       fr: 'Impulsion représente les changements rapides d’attention et l’hyperfocus.',
       de: 'Impuls steht für schnelle Aufmerksamkeitswechsel und Hyperfokus.',
     ),
+    NeuroType.aacc => _pick(
+      es: 'Alternancia representa la búsqueda de estímulo: fases frías de bajo reto y ráfagas rápidas cuando aparece suficiente desafío.',
+      en: 'Alternation represents the search for stimulation: cool low-challenge phases and fast bursts when enough challenge appears.',
+      pt: 'Alternancia representa a busca por estímulo: fases frias de baixo desafio e rajadas rápidas quando surge desafio suficiente.',
+      fr: 'Alternance représente la recherche de stimulation : phases froides de faible défi et poussées rapides quand le défi devient suffisant.',
+      de: 'Wechsel steht für die Suche nach Reiz: kühle Phasen geringer Herausforderung und schnelle Ausbrüche, wenn genug Herausforderung entsteht.',
+    ),
     NeuroType.tea => _pick(
       es: 'Patrón representa reconocimiento de regularidades y necesidad de previsibilidad.',
       en: 'Pattern represents recognizing regularities and needing predictability.',
@@ -867,6 +916,8 @@ class AppLocalizations {
   String profileSources(NeuroType type) => switch (type) {
     NeuroType.tdah =>
       'National Institute of Mental Health (NIMH) - Attention-Deficit/Hyperactivity Disorder (ADHD)\nhttps://www.nimh.nih.gov/health/topics/attention-deficit-hyperactivity-disorder-adhd',
+    NeuroType.aacc =>
+      'National Association for Gifted Children - What is Giftedness?\nhttps://nagc.org/page/what-is-giftedness',
     NeuroType.tea =>
       'National Institute of Mental Health (NIMH) - Autism Spectrum Disorder\nhttps://www.nimh.nih.gov/health/topics/autism-spectrum-disorders-asd\n\nCenters for Disease Control and Prevention (CDC) - About Autism Spectrum Disorder\nhttps://www.cdc.gov/autism/about/index.html',
     NeuroType.tlp =>

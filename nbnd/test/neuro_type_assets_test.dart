@@ -9,8 +9,8 @@ void main() {
         .map((NeuroType type) => type.iconAsset)
         .toList(growable: false);
 
-    expect(paths, hasLength(8));
-    expect(paths.toSet(), hasLength(8));
+    expect(paths, hasLength(NeuroType.values.length));
+    expect(paths.toSet(), hasLength(NeuroType.values.length));
     expect(paths, everyElement(startsWith('assets/images/profiles/')));
   });
 
@@ -19,8 +19,8 @@ void main() {
         .map((NeuroType type) => type.flameIconAsset)
         .toList(growable: false);
 
-    expect(paths, hasLength(8));
-    expect(paths.toSet(), hasLength(8));
+    expect(paths, hasLength(NeuroType.values.length));
+    expect(paths.toSet(), hasLength(NeuroType.values.length));
     expect(paths, everyElement(startsWith('profiles/')));
   });
 

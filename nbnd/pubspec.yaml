@@ -29,6 +29,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    # Includes profile art like assets/images/profiles/aacc.png.
     - assets/images/profiles/
     - assets/images/spoons/
     - assets/images/backgrounds/

@@ -6,6 +6,16 @@ import 'package:nbnd/game/models/collision_result.dart';
 import 'package:nbnd/models/neuro_type.dart';
 
 void main() {
+  test('AACC rhythm starts fast and alternates between strong extremes', () {
+    expect(aaccRhythmRate(0), 1.5);
+    expect(aaccRhythmRate(2), 1.5);
+    expect(aaccRhythmRate(3.3), .5);
+    expect(aaccRhythmRate(7.45), greaterThan(.5));
+    expect(aaccRhythmRate(7.9), 1.5);
+    expect(aaccRhythmRate(11), 1.5);
+    expect(aaccRhythmRate(13), .5);
+  });
+
   test('normalizeAngle keeps values inside one revolution', () {
     expect(normalizeAngle(-math.pi / 2), closeTo(math.pi * 1.5, .0001));
     expect(normalizeAngle(math.pi * 5), closeTo(math.pi, .0001));

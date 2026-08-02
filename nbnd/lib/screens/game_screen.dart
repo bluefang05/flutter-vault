@@ -41,6 +41,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   final MovementPointerTracker _pointerTracker = MovementPointerTracker();
   bool _showControlHint = true;
   bool _lastRunWasRecord = false;
+  double _lastMusicRate = 1;
 
   @override
   void initState() {
@@ -59,6 +60,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       maxSpoonHalves: profile.maxSpoonHalves,
       cleanPasses: 0,
       flowMultiplier: 1,
+      rhythmRate: 1,
       breathing: false,
       recovering: false,
       state: GameRunState.ready,
@@ -67,6 +69,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       neuroType: widget.neuroType,
       settings: widget.settings,
       onHudChanged: (HudSnapshot value) {
+        _syncMusicRate(value);
         if (mounted) setState(() => _hud = value);
       },
       onGameOver: _handleGameOver,
@@ -86,6 +89,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _pointerTracker.clear();
+    unawaited(SfxPlayer.instance.setGameMusicRate(1));
     unawaited(SfxPlayer.instance.stopGameMusic());
     super.dispose();
   }
@@ -103,6 +107,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
 
   Future<void> _handleGameOver(int score) async {
     await SfxPlayer.instance.stopGameMusic();
+    await SfxPlayer.instance.setGameMusicRate(1);
     if (widget.settings.haptics) {
       await HapticFeedback.heavyImpact();
     }
@@ -121,6 +126,15 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     if (widget.settings.haptics) {
       await HapticFeedback.mediumImpact();
     }
+  }
+
+  void _syncMusicRate(HudSnapshot value) {
+    final double targetRate = widget.neuroType == NeuroType.aacc
+        ? value.rhythmRate
+        : 1;
+    if ((targetRate - _lastMusicRate).abs() < .035) return;
+    _lastMusicRate = targetRate;
+    unawaited(SfxPlayer.instance.setGameMusicRate(targetRate));
   }
 
   void _pauseGame() {

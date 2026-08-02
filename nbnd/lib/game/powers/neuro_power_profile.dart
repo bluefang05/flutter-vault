@@ -29,6 +29,14 @@ class NeuroPowerProfile {
         patternRandomness: 1,
         maxSpoonHalves: 10,
       ),
+      NeuroType.aacc => const NeuroPowerProfile(
+        type: NeuroType.aacc,
+        playerSpeed: 3.85,
+        baseGapWidth: math.pi / 2.8,
+        cooldown: 8.5,
+        patternRandomness: .72,
+        maxSpoonHalves: 10,
+      ),
       NeuroType.tea => const NeuroPowerProfile(
         type: NeuroType.tea,
         playerSpeed: 3.15,

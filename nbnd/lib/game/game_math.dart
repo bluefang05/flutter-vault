@@ -8,6 +8,41 @@ double normalizeAngle(double angle) {
   return normalized < 0 ? normalized + math.pi * 2 : normalized;
 }
 
+double aaccRhythmRate(double elapsed) {
+  const List<(double, double, double, double)> cycles =
+      <(double, double, double, double)>[
+        (2.4, .8, 3.8, .9),
+        (3.1, 1.1, 4.6, .7),
+        (2.0, .7, 3.3, 1.2),
+      ];
+  double remaining = math.max(0, elapsed);
+  int cycleIndex = 0;
+  while (true) {
+    final (double fast, double fall, double slow, double rise) =
+        cycles[cycleIndex];
+    final double duration = fast + fall + slow + rise;
+    if (remaining <= duration) {
+      if (remaining <= fast) return 1.5;
+      remaining -= fast;
+      if (remaining <= fall) {
+        return _smoothRate(1.5, .5, remaining / fall);
+      }
+      remaining -= fall;
+      if (remaining <= slow) return .5;
+      remaining -= slow;
+      return _smoothRate(.5, 1.5, remaining / rise);
+    }
+    remaining -= duration;
+    cycleIndex = (cycleIndex + 1) % cycles.length;
+  }
+}
+
+double _smoothRate(double from, double to, double progress) {
+  final double t = progress.clamp(0.0, 1.0).toDouble();
+  final double eased = t * t * (3 - 2 * t);
+  return from + (to - from) * eased;
+}
+
 double signedAngularDifference(double a, double b) {
   return (a - b + math.pi) % (math.pi * 2) - math.pi;
 }

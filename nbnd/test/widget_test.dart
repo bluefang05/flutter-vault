@@ -31,7 +31,7 @@ void main() {
     expect(_profileImage(NeuroType.tdah, minWidth: 50), findsOneWidget);
   });
 
-  testWidgets('home profile icon changes when the profile page changes', (
+  testWidgets('home selected profile changes when the profile page changes', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const NbndApp());
@@ -39,10 +39,25 @@ void main() {
 
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -360));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.drag(find.bySubtype<PageView>(), const Offset(-320, 0));
-    await tester.pump(const Duration(milliseconds: 500));
+    final Finder pageView = find.bySubtype<PageView>();
+    await tester.dragFrom(tester.getCenter(pageView), const Offset(-500, 0));
+    await tester.pump(const Duration(milliseconds: 600));
 
-    expect(_profileImage(NeuroType.tea), findsWidgets);
+    expect(find.textContaining('AACC'), findsWidgets);
+    expect(_profileImage(NeuroType.aacc, minWidth: 50), findsOneWidget);
+  });
+
+  testWidgets('home power cards do not show redundant selection indicators', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const NbndApp());
+    await tester.pump(const Duration(milliseconds: 300));
+
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -360));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(find.byIcon(Icons.radio_button_checked), findsNothing);
+    expect(find.byIcon(Icons.swipe_rounded), findsNothing);
   });
 
   testWidgets('home opens the profile information screen', (

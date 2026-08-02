@@ -11,6 +11,7 @@ class HudSnapshot {
     required this.maxSpoonHalves,
     required this.cleanPasses,
     required this.flowMultiplier,
+    required this.rhythmRate,
     required this.breathing,
     required this.recovering,
     required this.state,
@@ -25,6 +26,7 @@ class HudSnapshot {
   final int maxSpoonHalves;
   final int cleanPasses;
   final double flowMultiplier;
+  final double rhythmRate;
   final bool breathing;
   final bool recovering;
   final GameRunState state;

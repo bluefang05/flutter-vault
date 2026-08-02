@@ -26,11 +26,16 @@ class SfxPlayer {
   final AudioPlayer _recordPlayer = AudioPlayer(playerId: 'new_record');
   final AudioPlayer _powerTapPlayer = AudioPlayer(playerId: 'power_tap');
   final AudioPlayer _musicPlayer = AudioPlayer(playerId: 'game_music');
+  double _requestedMusicRate = 1;
+  double _appliedMusicRate = 1;
+  bool _updatingMusicRate = false;
 
   Future<void> playGameMusic() async {
     await _ignoreAudioFailures(() async {
       await _musicPlayer.setAudioContext(_musicAudioContext);
       await _musicPlayer.setReleaseMode(ReleaseMode.loop);
+      await _musicPlayer.setPlaybackRate(_requestedMusicRate);
+      _appliedMusicRate = _requestedMusicRate;
       await _musicPlayer.play(
         AssetSource('audio/music/game_loop.mp3'),
         volume: .34,
@@ -43,6 +48,21 @@ class SfxPlayer {
   Future<void> resumeGameMusic() => _ignoreAudioFailures(_musicPlayer.resume);
 
   Future<void> stopGameMusic() => _ignoreAudioFailures(_musicPlayer.stop);
+
+  Future<void> setGameMusicRate(double rate) async {
+    _requestedMusicRate = rate.clamp(.5, 1.5).toDouble();
+    if (_updatingMusicRate) return;
+    _updatingMusicRate = true;
+    try {
+      while ((_requestedMusicRate - _appliedMusicRate).abs() > .001) {
+        final double target = _requestedMusicRate;
+        await _ignoreAudioFailures(() => _musicPlayer.setPlaybackRate(target));
+        _appliedMusicRate = target;
+      }
+    } finally {
+      _updatingMusicRate = false;
+    }
+  }
 
   Future<void> playHurtCollision() async {
     await _playEffect(

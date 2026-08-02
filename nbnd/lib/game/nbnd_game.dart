@@ -82,6 +82,12 @@ class NbndGame extends FlameGame {
   double get _outerSpawnRadius => math.max(size.x, size.y) * .68;
   double get _ringThickness => 15;
   double get _minimumRingSeparation => math.max(112, _playerRadius * 1.55);
+  double get _aaccRhythmRate {
+    if (neuroType != NeuroType.aacc) return 1;
+    if (_elapsed < _slowUntil) return .5;
+    return aaccRhythmRate(_elapsed);
+  }
+
   int get score => (_elapsed * 100).floor() + _scoreBonus;
   int get _tocCandidateCount {
     int count = 0;
@@ -197,6 +203,10 @@ class NbndGame extends FlameGame {
       case NeuroType.tdah:
         _slowUntil = _elapsed + 2.4;
         break;
+      case NeuroType.aacc:
+        _slowUntil = _elapsed + 1.25;
+        _powerImmunityUntil = _elapsed + .45;
+        break;
       case NeuroType.tea:
         _freezeRotationUntil = _elapsed + 3;
         break;
@@ -261,15 +271,19 @@ class NbndGame extends FlameGame {
   void _updateStep(double dt) {
     final double practiceFactor = settings.practiceMode ? .72 : 1;
     final bool slowed = _elapsed < _slowUntil;
-    final double worldScale = slowed ? .42 : 1;
+    final double rhythmRate = _aaccRhythmRate;
+    final double worldScale = neuroType == NeuroType.aacc
+        ? rhythmRate
+        : (slowed ? .42 : 1);
     final double gameDt = dt * practiceFactor;
     final double worldDt = gameDt * worldScale;
+    final double playerDt = neuroType == NeuroType.aacc ? worldDt : gameDt;
 
     _elapsed += gameDt;
     _abilityCooldownRemaining = math.max(0, _abilityCooldownRemaining - gameDt);
     if (_elapsed >= _controlLockedUntil) {
       _playerAngle = normalizeAngle(
-        _playerAngle + _moveDirection * profile.playerSpeed * gameDt,
+        _playerAngle + _moveDirection * profile.playerSpeed * playerDt,
       );
     }
 
@@ -695,6 +709,7 @@ class NbndGame extends FlameGame {
         maxSpoonHalves: profile.maxSpoonHalves,
         cleanPasses: _cleanPasses,
         flowMultiplier: flowMultiplier(_cleanPasses),
+        rhythmRate: _aaccRhythmRate,
         breathing: _isBreathing,
         recovering: _elapsed < _orbRecoveryUntil,
         state: _state,
@@ -750,37 +765,37 @@ class NbndGame extends FlameGame {
     canvas.drawRect(fullRect, base);
 
     final ui.Image? image = _backgroundImage;
-    if (image == null) return;
-
-    final Size imageSize = Size(
-      image.width.toDouble(),
-      image.height.toDouble(),
-    );
-    final double scale = math.max(
-      fullRect.width / imageSize.width,
-      fullRect.height / imageSize.height,
-    );
-    final Size sourceSize = Size(
-      fullRect.width / scale,
-      fullRect.height / scale,
-    );
-    final Rect source = Rect.fromCenter(
-      center: Offset(imageSize.width / 2, imageSize.height / 2),
-      width: sourceSize.width,
-      height: sourceSize.height,
-    );
-    canvas.drawImageRect(
-      image,
-      source,
-      fullRect,
-      Paint()
-        ..filterQuality = FilterQuality.medium
-        ..color = const Color(0xE6FFFFFF)
-        ..colorFilter = const ColorFilter.mode(
-          Color(0xE6FFFFFF),
-          BlendMode.modulate,
-        ),
-    );
+    if (image != null) {
+      final Size imageSize = Size(
+        image.width.toDouble(),
+        image.height.toDouble(),
+      );
+      final double scale = math.max(
+        fullRect.width / imageSize.width,
+        fullRect.height / imageSize.height,
+      );
+      final Size sourceSize = Size(
+        fullRect.width / scale,
+        fullRect.height / scale,
+      );
+      final Rect source = Rect.fromCenter(
+        center: Offset(imageSize.width / 2, imageSize.height / 2),
+        width: sourceSize.width,
+        height: sourceSize.height,
+      );
+      canvas.drawImageRect(
+        image,
+        source,
+        fullRect,
+        Paint()
+          ..filterQuality = FilterQuality.medium
+          ..color = const Color(0xE6FFFFFF)
+          ..colorFilter = const ColorFilter.mode(
+            Color(0xE6FFFFFF),
+            BlendMode.modulate,
+          ),
+      );
+    }
     canvas.drawRect(
       fullRect,
       Paint()
@@ -794,6 +809,22 @@ class NbndGame extends FlameGame {
           stops: const <double>[0, .58, 1],
         ).createShader(fullRect),
     );
+    if (neuroType == NeuroType.aacc) {
+      final double rate = _aaccRhythmRate;
+      final bool activated = rate >= 1;
+      final double intensity = activated ? rate - 1 : 1 - rate;
+      final Color moodColor = activated
+          ? const Color(0xFFFF2F92)
+          : const Color(0xFF2878FF);
+      canvas.drawRect(
+        fullRect,
+        Paint()
+          ..color = moodColor.withValues(
+            alpha: (.08 + intensity * .34).clamp(.08, .25),
+          )
+          ..blendMode = BlendMode.screen,
+      );
+    }
   }
 
   Offset _cameraShakeOffset() {
