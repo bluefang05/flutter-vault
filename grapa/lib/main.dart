@@ -2,11 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 part 'src/models.dart';
 part 'src/assets.dart';
+part 'src/ads.dart';
 part 'src/home.dart';
 part 'src/home_mission_editor.dart';
 part 'src/today_view.dart';
@@ -17,10 +20,16 @@ part 'src/profile_view.dart';
 part 'src/profile_shop_widgets.dart';
 part 'src/common_widgets.dart';
 
-void main() => runApp(const GrapaApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  unawaited(MobileAds.instance.initialize());
+  runApp(const GrapaApp());
+}
 
 class GrapaApp extends StatelessWidget {
-  const GrapaApp({super.key});
+  const GrapaApp({super.key, this.showAds = true});
+
+  final bool showAds;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +53,7 @@ class GrapaApp extends StatelessWidget {
           fontFamily: 'sans',
         ),
       ),
-      home: const GrapaHome(),
+      home: GrapaHome(showAds: showAds),
     );
   }
 }

@@ -1,7 +1,9 @@
 part of '../main.dart';
 
 class GrapaHome extends StatefulWidget {
-  const GrapaHome({super.key});
+  const GrapaHome({super.key, this.showAds = true});
+
+  final bool showAds;
 
   @override
   State<GrapaHome> createState() => _GrapaHomeState();
@@ -332,31 +334,37 @@ class _GrapaHomeState extends State<GrapaHome> with WidgetsBindingObserver {
           ],
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: (value) => setState(() => _tab = value),
-        backgroundColor: const Color(0xFFFFFCF6),
-        indicatorColor: const Color(0xFFE7DDFC),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.check_circle_outline_rounded),
-            selectedIcon: Icon(Icons.check_circle_rounded),
-            label: 'Hoy',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map_rounded),
-            label: 'Aventura',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.pets_outlined),
-            selectedIcon: Icon(Icons.pets_rounded),
-            label: 'Pin',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: 'Perfil',
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (widget.showAds) const _BottomBannerAd(),
+          NavigationBar(
+            selectedIndex: _tab,
+            onDestinationSelected: (value) => setState(() => _tab = value),
+            backgroundColor: const Color(0xFFFFFCF6),
+            indicatorColor: const Color(0xFFE7DDFC),
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.check_circle_outline_rounded),
+                selectedIcon: Icon(Icons.check_circle_rounded),
+                label: 'Hoy',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.map_outlined),
+                selectedIcon: Icon(Icons.map_rounded),
+                label: 'Aventura',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.pets_outlined),
+                selectedIcon: Icon(Icons.pets_rounded),
+                label: 'Pin',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline_rounded),
+                selectedIcon: Icon(Icons.person_rounded),
+                label: 'Perfil',
+              ),
+            ],
           ),
         ],
       ),

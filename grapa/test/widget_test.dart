@@ -10,7 +10,7 @@ void main() {
   });
 
   testWidgets('muestra y completa las misiones del día', (tester) async {
-    await tester.pumpWidget(const GrapaApp());
+    await tester.pumpWidget(const GrapaApp(showAds: false));
 
     expect(find.text('Tu aventura de hoy'), findsOneWidget);
     expect(find.text('Preparar presentación'), findsOneWidget);
@@ -24,7 +24,7 @@ void main() {
   });
 
   testWidgets('permite navegar al rincón de Pin', (tester) async {
-    await tester.pumpWidget(const GrapaApp());
+    await tester.pumpWidget(const GrapaApp(showAds: false));
 
     await tester.tap(find.text('Pin'));
     await tester.pumpAndSettle();
@@ -36,7 +36,7 @@ void main() {
   testWidgets('no cobra dos veces si Pin ya está comiendo', (tester) async {
     SharedPreferences.setMockInitialValues({'coins': 50, 'pin_hearts': 3});
 
-    await tester.pumpWidget(const GrapaApp());
+    await tester.pumpWidget(const GrapaApp(showAds: false));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Pin'));
@@ -62,7 +62,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({'coins': 50, 'pin_hearts': 5});
 
-    await tester.pumpWidget(const GrapaApp());
+    await tester.pumpWidget(const GrapaApp(showAds: false));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Pin'));
@@ -88,7 +88,7 @@ void main() {
       'pin_hearts': 3,
     });
 
-    await tester.pumpWidget(const GrapaApp());
+    await tester.pumpWidget(const GrapaApp(showAds: false));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Perfil'));
@@ -110,7 +110,7 @@ void main() {
   });
 
   testWidgets('permite equipar ropa de Grapa desde el perfil', (tester) async {
-    await tester.pumpWidget(const GrapaApp());
+    await tester.pumpWidget(const GrapaApp(showAds: false));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Perfil'));
@@ -137,7 +137,7 @@ void main() {
   testWidgets('muestra el progreso de aventura y vuelve a las misiones', (
     tester,
   ) async {
-    await tester.pumpWidget(const GrapaApp());
+    await tester.pumpWidget(const GrapaApp(showAds: false));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Aventura'));
@@ -158,7 +158,7 @@ void main() {
   });
 
   testWidgets('edita el nombre y el detalle de una misión', (tester) async {
-    await tester.pumpWidget(const GrapaApp());
+    await tester.pumpWidget(const GrapaApp(showAds: false));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.more_vert_rounded).first);
@@ -179,7 +179,7 @@ void main() {
   testWidgets('muestra un estado útil al eliminar todas las misiones', (
     tester,
   ) async {
-    await tester.pumpWidget(const GrapaApp());
+    await tester.pumpWidget(const GrapaApp(showAds: false));
     await tester.pumpAndSettle();
 
     for (var index = 0; index < 3; index++) {
@@ -212,7 +212,7 @@ void main() {
           '[{"title":"Estirar","subtitle":"Salud · 5 min","categoryAsset":"assets/images/mision_categoria/mision_categoria_02_ejercicio.png","color":4289976240,"done":true}]',
     });
 
-    await tester.pumpWidget(const GrapaApp());
+    await tester.pumpWidget(const GrapaApp(showAds: false));
     await tester.pumpAndSettle();
 
     expect(find.text('777'), findsOneWidget);
@@ -239,7 +239,7 @@ void main() {
       'daily_missions': '[$missions]',
     });
 
-    await tester.pumpWidget(const GrapaApp());
+    await tester.pumpWidget(const GrapaApp(showAds: false));
     await tester.pumpAndSettle();
 
     for (var index = 1; index <= 5; index++) {
