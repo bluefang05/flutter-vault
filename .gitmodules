@@ -34,3 +34,11 @@
 	path = teleo
 	url = https://github.com/bluefang05/teleo.git
 
+[submodule "Haciendo"]
+	path = Haciendo
+	url = https://github.com/bluefang05/Haciendo.git
+	branch = main
+[submodule "casileo"]
+	path = casileo
+	url = https://github.com/bluefang05/casileo.git
+	branch = main
