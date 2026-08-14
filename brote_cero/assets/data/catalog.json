@@ -1,0 +1,26 @@
+{
+  "stories": [
+    {
+      "id": "001",
+      "archiveLabel": "Archivo 001",
+      "title": "Antes de dejar de ser mamá",
+      "subtitle": "Una historia de Brote Cero",
+      "cover": "assets/story/001/page_01.webp",
+      "estimatedMinutes": 6,
+      "pageCount": 8,
+      "tags": ["Horror", "Supervivencia"],
+      "contentVersion": "1.0"
+    },
+    {
+      "id": "002",
+      "archiveLabel": "Archivo 002",
+      "title": "Los cÃ³ndores no comen",
+      "subtitle": "Una historia de Brote Cero",
+      "cover": "assets/story/002/page_01.webp",
+      "estimatedMinutes": 7,
+      "pageCount": 8,
+      "tags": ["Horror", "Supervivencia"],
+      "contentVersion": "1.1"
+    }
+  ]
+}

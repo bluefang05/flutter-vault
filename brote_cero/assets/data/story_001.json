@@ -1,0 +1,58 @@
+{
+  "id": "001",
+  "archiveLabel": "Archivo 001",
+  "title": "Antes de dejar de ser mamá",
+  "subtitle": "Una historia de Brote Cero",
+  "contentVersion": "1.0",
+  "estimatedMinutes": 6,
+  "pages": [
+    {
+      "id": "001-001",
+      "asset": "assets/story/001/page_01.webp",
+      "width": 1055,
+      "height": 1491
+    },
+    {
+      "id": "001-002",
+      "asset": "assets/story/001/page_02.webp",
+      "width": 1055,
+      "height": 1491
+    },
+    {
+      "id": "001-003",
+      "asset": "assets/story/001/page_03.webp",
+      "width": 1055,
+      "height": 1491
+    },
+    {
+      "id": "001-004",
+      "asset": "assets/story/001/page_04.webp",
+      "width": 1055,
+      "height": 1491
+    },
+    {
+      "id": "001-005",
+      "asset": "assets/story/001/page_05.webp",
+      "width": 1055,
+      "height": 1491
+    },
+    {
+      "id": "001-006",
+      "asset": "assets/story/001/page_06.webp",
+      "width": 1055,
+      "height": 1491
+    },
+    {
+      "id": "001-007",
+      "asset": "assets/story/001/page_07.webp",
+      "width": 1055,
+      "height": 1491
+    },
+    {
+      "id": "001-008",
+      "asset": "assets/story/001/page_08.webp",
+      "width": 1055,
+      "height": 1491
+    }
+  ]
+}

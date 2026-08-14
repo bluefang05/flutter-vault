@@ -1,0 +1,18 @@
+{
+  "id": "002",
+  "archiveLabel": "Archivo 002",
+  "title": "Los cóndores no comen",
+  "subtitle": "Una historia de Brote Cero",
+  "contentVersion": "1.1",
+  "estimatedMinutes": 7,
+  "pages": [
+    {"asset": "assets/story/002/page_01.webp", "width": 941, "height": 1672},
+    {"asset": "assets/story/002/page_02.webp", "width": 941, "height": 1672},
+    {"asset": "assets/story/002/page_03.webp", "width": 941, "height": 1672},
+    {"asset": "assets/story/002/page_04.webp", "width": 941, "height": 1672},
+    {"asset": "assets/story/002/page_05.webp", "width": 941, "height": 1672},
+    {"asset": "assets/story/002/page_06.webp", "width": 941, "height": 1672},
+    {"asset": "assets/story/002/page_07.webp", "width": 941, "height": 1672},
+    {"asset": "assets/story/002/page_08.webp", "width": 941, "height": 1672}
+  ]
+}

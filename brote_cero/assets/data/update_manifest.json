@@ -1,0 +1,13 @@
+{
+  "available": true,
+  "currentContentVersion": "1.1",
+  "latestContentVersion": "1.2",
+  "headline": "Nueva version disponible",
+  "body": "Brote Cero ya tiene dos archivos locales. Este aviso sigue funcionando como demostracion de la arquitectura de actualizaciones de contenido.",
+  "items": [
+    "Nuevas cronicas",
+    "Mas archivos recuperados",
+    "Mejoras del lector"
+  ],
+  "demo": true
+}
