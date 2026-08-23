@@ -1,0 +1,22 @@
+﻿PYMERD — CIERRE DE DEPENDENCIAS PARA ANDROID API 21
+=========================================================
+
+El volcado actual todavía muestra webview_flutter_android 4.13.0 y no
+contiene dependency_overrides para WebView.
+
+Este paquete:
+1. Fija minSdk = 21.
+2. Añade dependency_overrides:
+     webview_flutter_android: 4.10.1
+3. Ejecuta flutter clean y flutter pub get.
+4. Reaplica el parche de google_mobile_ads 5.3.1 si Pub lo restauró.
+5. Verifica pubspec.lock.
+6. Compila app-release.apk.
+
+4.10.1 es la última versión inmediatamente anterior al cambio a minSdk 24
+que entró en 4.10.2.
+
+USO:
+- Extrae el ZIP.
+- Ejecuta APLICAR_CIERRE_API21_Y_COMPILAR.cmd
+- Luego EJECUTAR_PYMERD_RELEASE.cmd

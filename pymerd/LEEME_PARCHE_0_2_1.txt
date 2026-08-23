@@ -1,0 +1,15 @@
+PYMERD 0.2.1 — parche puntual
+
+Corrige:
+lib/screens/inventory_page.dart:242
+Error: Undefined name 'widget'.
+
+La fecha de vencimiento ahora se inicializa en initState(), cuando el State ya tiene acceso válido a widget.
+
+Uso:
+1. Descomprime el ZIP encima de la raíz de pymerd.
+2. Ejecuta:
+   Set-ExecutionPolicy -Scope Process Bypass
+   .\APLICAR_PARCHE_PYMERD_0_2_1.ps1
+
+No elimina ni migra datos.

@@ -1,0 +1,24 @@
+VOXEL ANACONDA v1.4 — AUDIO
+
+SFX INTEGRADOS, RECOMPRIMIDOS A 96 kbps:
+- assets/sfx/orb.mp3
+  Fuente: 47313572-ui-pop-sound-316482.mp3
+
+- assets/sfx/blessing.mp3
+  Fuente: arnav_geddada-ui-sound-374228(1).mp3
+
+- assets/sfx/new_record.mp3
+  Fuente: u_3ay6aijdt2-bell1-445873.mp3
+
+- assets/sfx/curse.mp3
+  Fuente: 47313572-ui-sounds-pack-2-sound-4-358895.mp3
+
+MÚSICA:
+- assets/music/background.mp3
+  Fuente: penguinmusic-atmospheric-14188.mp3
+  Versión usada en la app: 96 kbps, aprox. 2.67 MB.
+
+IMPORTANTE
+El nombre del archivo no demuestra la licencia.
+Antes de publicar, conservar la página original y una copia/evidencia de la
+licencia o condiciones de uso de cada pista/efecto.

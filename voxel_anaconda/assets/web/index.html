@@ -1,0 +1,1132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Voxel Anaconda</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050812;font-family:Segoe UI,Arial,sans-serif;color:#fff;touch-action:none}
+canvas{display:block;width:100vw;height:100vh}
+#hud{position:fixed;inset:0;pointer-events:none;text-shadow:0 2px 4px #000}
+#stats{position:absolute;left:10px;top:8px;display:flex;gap:7px;font-size:12px;flex-wrap:wrap;max-width:58vw}
+.pill{padding:6px 8px;background:#0007;border:1px solid #ffffff1c;border-radius:9px}
+.pill b{color:#ffb24d}
+#effectPill{display:none}
+#center{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);text-align:center;width:min(620px,72vw)}
+#center.hide{display:none}
+#center h1{font-size:clamp(26px,5vw,54px);margin:0 0 8px;letter-spacing:-1px}
+#center p{font-size:13px;line-height:1.45;color:#d5def1}
+#pauseMark{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:44px;font-weight:900;opacity:0}
+#eventToast{position:absolute;left:50%;top:18%;transform:translateX(-50%) scale(.96);padding:9px 15px;border-radius:14px;
+background:#06101ddd;border:1px solid #ffffff24;font-size:13px;font-weight:900;letter-spacing:.7px;opacity:0;
+transition:opacity .16s ease,transform .16s ease;white-space:nowrap}
+#eventToast.show{opacity:1;transform:translateX(-50%) scale(1)}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <div id="stats">
+    <div class="pill"><span id="labelScore">Puntos</span> <b id="score">0</b></div>
+    <div class="pill"><span id="labelLength">Longitud</span> <b id="len">2</b></div>
+    <div class="pill"><span id="labelBest">Récord</span> <b id="best">0</b></div>
+    <div class="pill"><span id="labelTime">Tiempo</span> <b id="time">0:00</b></div>
+    <div class="pill" id="lifePill" style="display:none"><span id="labelLife">Vida</span> <b id="life">♥</b></div>
+    <div class="pill" id="effectPill"><span id="labelEffect">Efecto</span> <b id="effect">—</b></div>
+  </div>
+  <div id="center">
+    <h1>VOXEL ANACONDA</h1>
+    <p>Naranja = objetivo. Celeste = bendición. Rojo = riesgo y recompensa. Los bloques oscuros temporales primero avisan y después se vuelven sólidos.</p>
+  </div>
+  <div id="eventToast"></div>
+  <div id="pauseMark">PAUSA</div>
+</div>
+
+<script>
+(()=>{'use strict';
+
+const c=document.getElementById('c');
+const x=c.getContext('2d');
+const scoreE=document.getElementById('score');
+const lenE=document.getElementById('len');
+const bestE=document.getElementById('best');
+const timeE=document.getElementById('time');
+const effectE=document.getElementById('effect');
+const effectPill=document.getElementById('effectPill');
+const lifePill=document.getElementById('lifePill');
+const lifeE=document.getElementById('life');
+const labelLife=document.getElementById('labelLife');
+const labelScore=document.getElementById('labelScore');
+const labelLength=document.getElementById('labelLength');
+const labelBest=document.getElementById('labelBest');
+const labelTime=document.getElementById('labelTime');
+const labelEffect=document.getElementById('labelEffect');
+const center=document.getElementById('center');
+const pauseMark=document.getElementById('pauseMark');
+const eventToast=document.getElementById('eventToast');
+
+
+const TEXT={
+  en:{score:'Score',length:'Length',best:'Best',time:'Time',effect:'Effect',pause:'PAUSE',
+    life:'Life',blessingLife:'BLESSING · EXTRA LIFE',curseGrowth:'CURSE · GROWTH +3',curseDeath:'The curse had other plans.',lifeSaved:'EXTRA LIFE · SAVED! CHOOSE A DIRECTION',
+    intro:'Orange = objective. Cyan = blessing. Red = risk and reward. Dark temporary blocks warn first, then become solid.',
+    slow:'SLOW',fever:'FEVER',blessing:'BLESSING · SLOW TIME',curse:'CURSE · FEVER · +300',
+    wall:'You hit a wall of the large cube.',obstacle:'You hit a temporary obstacle.',self:'You hit your own body.'},
+  es:{score:'Puntos',length:'Longitud',best:'Récord',time:'Tiempo',effect:'Efecto',pause:'PAUSA',
+    life:'Vida',blessingLife:'BENDICIÓN · VIDA EXTRA',curseGrowth:'MALDICIÓN · CRECIMIENTO +3',curseDeath:'La maldición tenía otros planes.',lifeSaved:'VIDA EXTRA · ¡SALVADO! ELIGE DIRECCIÓN',
+    intro:'Naranja = objetivo. Celeste = bendición. Rojo = riesgo y recompensa. Los bloques oscuros temporales primero avisan y después se vuelven sólidos.',
+    slow:'LENTO',fever:'FIEBRE',blessing:'BENDICIÓN · TIEMPO LENTO',curse:'MALDICIÓN · FIEBRE · +300',
+    wall:'Golpeaste una pared del cubo grande.',obstacle:'Chocaste con un obstáculo temporal.',self:'Chocaste con tu propio cuerpo.'},
+  pt:{score:'Pontos',length:'Comprimento',best:'Recorde',time:'Tempo',effect:'Efeito',pause:'PAUSA',
+    life:'Vida',blessingLife:'BÊNÇÃO · VIDA EXTRA',curseGrowth:'MALDIÇÃO · CRESCIMENTO +3',curseDeath:'A maldição tinha outros planos.',lifeSaved:'VIDA EXTRA · SALVO! ESCOLHA UMA DIREÇÃO',
+    intro:'Laranja = objetivo. Azul-celeste = bênção. Vermelho = risco e recompensa. Blocos escuros temporários avisam antes de ficarem sólidos.',
+    slow:'LENTO',fever:'FEBRE',blessing:'BÊNÇÃO · TEMPO LENTO',curse:'MALDIÇÃO · FEBRE · +300',
+    wall:'Você bateu na parede do cubo grande.',obstacle:'Você bateu em um obstáculo temporário.',self:'Você bateu no próprio corpo.'},
+  fr:{score:'Score',length:'Longueur',best:'Record',time:'Temps',effect:'Effet',pause:'PAUSE',
+    life:'Vie',blessingLife:'BÉNÉDICTION · VIE SUPPLÉMENTAIRE',curseGrowth:'MALÉDICTION · CROISSANCE +3',curseDeath:'La malédiction avait d’autres projets.',lifeSaved:'VIE SUPPLÉMENTAIRE · SAUVÉ ! CHOISISSEZ UNE DIRECTION',
+    intro:'Orange = objectif. Cyan = bénédiction. Rouge = risque et récompense. Les blocs sombres temporaires préviennent avant de devenir solides.',
+    slow:'RALENTI',fever:'FIÈVRE',blessing:'BÉNÉDICTION · TEMPS RALENTI',curse:'MALÉDICTION · FIÈVRE · +300',
+    wall:'Vous avez heurté une paroi du grand cube.',obstacle:'Vous avez heurté un obstacle temporaire.',self:'Vous avez heurté votre propre corps.'},
+  de:{score:'Punkte',length:'Länge',best:'Rekord',time:'Zeit',effect:'Effekt',pause:'PAUSE',
+    life:'Leben',blessingLife:'SEGEN · EXTRALeben',curseGrowth:'FLUCH · WACHSTUM +3',curseDeath:'Der Fluch hatte andere Pläne.',lifeSaved:'EXTRALEBEN · GERETTET! RICHTUNG WÄHLEN',
+    intro:'Orange = Ziel. Cyan = Segen. Rot = Risiko und Belohnung. Dunkle temporäre Blöcke warnen zuerst und werden dann fest.',
+    slow:'LANGSAM',fever:'FIEBER',blessing:'SEGEN · ZEITLUPE',curse:'FLUCH · FIEBER · +300',
+    wall:'Du bist gegen eine Wand des großen Würfels gestoßen.',obstacle:'Du bist gegen ein temporäres Hindernis gestoßen.',self:'Du bist gegen deinen eigenen Körper gestoßen.'},
+  it:{score:'Punti',length:'Lunghezza',best:'Record',time:'Tempo',effect:'Effetto',pause:'PAUSA',
+    life:'Vita',blessingLife:'BENEDIZIONE · VITA EXTRA',curseGrowth:'MALEDIZIONE · CRESCITA +3',curseDeath:'La maledizione aveva altri piani.',lifeSaved:'VITA EXTRA · SALVO! SCEGLI UNA DIREZIONE',
+    intro:'Arancione = obiettivo. Celeste = benedizione. Rosso = rischio e ricompensa. I blocchi scuri temporanei avvisano prima di diventare solidi.',
+    slow:'LENTO',fever:'FEBBRE',blessing:'BENEDIZIONE · TEMPO LENTO',curse:'MALEDIZIONE · FEBBRE · +300',
+    wall:'Hai colpito una parete del cubo grande.',obstacle:'Hai colpito un ostacolo temporaneo.',self:'Hai colpito il tuo stesso corpo.'},
+  nl:{score:'Score',length:'Lengte',best:'Record',time:'Tijd',effect:'Effect',pause:'PAUZE',
+    life:'Leven',blessingLife:'ZEGENING · EXTRA LEVEN',curseGrowth:'VLOEK · GROEI +3',curseDeath:'De vloek had andere plannen.',lifeSaved:'EXTRA LEVEN · GERED! KIES EEN RICHTING',
+    intro:'Oranje = doel. Cyaan = zegening. Rood = risico en beloning. Donkere tijdelijke blokken waarschuwen eerst en worden daarna solide.',
+    slow:'LANGZAAM',fever:'KOORTS',blessing:'ZEGENING · LANGZAME TIJD',curse:'VLOEK · KOORTS · +300',
+    wall:'Je raakte een wand van de grote kubus.',obstacle:'Je raakte een tijdelijk obstakel.',self:'Je botste tegen je eigen lichaam.'},
+  pl:{score:'Punkty',length:'Długość',best:'Rekord',time:'Czas',effect:'Efekt',pause:'PAUZA',
+    life:'Życie',blessingLife:'BŁOGOSŁAWIEŃSTWO · DODATKOWE ŻYCIE',curseGrowth:'KLĄTWA · WZROST +3',curseDeath:'Klątwa miała inne plany.',lifeSaved:'DODATKOWE ŻYCIE · URATOWANY! WYBIERZ KIERUNEK',
+    intro:'Pomarańczowy = cel. Błękitny = błogosławieństwo. Czerwony = ryzyko i nagroda. Ciemne tymczasowe bloki najpierw ostrzegają, potem stają się stałe.',
+    slow:'WOLNO',fever:'GORĄCZKA',blessing:'BŁOGOSŁAWIEŃSTWO · SPOWOLNIENIE',curse:'KLĄTWA · GORĄCZKA · +300',
+    wall:'Uderzyłeś w ścianę dużego sześcianu.',obstacle:'Uderzyłeś w tymczasową przeszkodę.',self:'Uderzyłeś we własne ciało.'},
+  ru:{score:'Очки',length:'Длина',best:'Рекорд',time:'Время',effect:'Эффект',pause:'ПАУЗА',
+    life:'Жизнь',blessingLife:'БЛАГОСЛОВЕНИЕ · ДОП. ЖИЗНЬ',curseGrowth:'ПРОКЛЯТИЕ · РОСТ +3',curseDeath:'У проклятия были другие планы.',lifeSaved:'ДОП. ЖИЗНЬ · СПАСЕН! ВЫБЕРИТЕ НАПРАВЛЕНИЕ',
+    intro:'Оранжевый = цель. Голубой = благословение. Красный = риск и награда. Тёмные временные блоки сначала предупреждают, затем становятся твёрдыми.',
+    slow:'МЕДЛЕННО',fever:'ЛИХОРАДКА',blessing:'БЛАГОСЛОВЕНИЕ · ЗАМЕДЛЕНИЕ',curse:'ПРОКЛЯТИЕ · ЛИХОРАДКА · +300',
+    wall:'Вы ударились о стену большого куба.',obstacle:'Вы столкнулись с временным препятствием.',self:'Вы столкнулись со своим телом.'},
+  tr:{score:'Puan',length:'Uzunluk',best:'Rekor',time:'Süre',effect:'Etki',pause:'DURAKLAT',
+    life:'Can',blessingLife:'KUTSAMA · EKSTRA CAN',curseGrowth:'LANET · BÜYÜME +3',curseDeath:'Lanetin başka planları vardı.',lifeSaved:'EKSTRA CAN · KURTULDUN! YÖN SEÇ',
+    intro:'Turuncu = hedef. Camgöbeği = kutsama. Kırmızı = risk ve ödül. Koyu geçici bloklar önce uyarır, sonra katılaşır.',
+    slow:'YAVAŞ',fever:'ATEŞ',blessing:'KUTSAMA · YAVAŞ ZAMAN',curse:'LANET · ATEŞ · +300',
+    wall:'Büyük küpün duvarına çarptın.',obstacle:'Geçici bir engele çarptın.',self:'Kendi gövdene çarptın.'},
+  id:{score:'Poin',length:'Panjang',best:'Rekor',time:'Waktu',effect:'Efek',pause:'JEDA',
+    life:'Nyawa',blessingLife:'BERKAH · NYAWA EKSTRA',curseGrowth:'KUTUKAN · TUMBUH +3',curseDeath:'Kutukan punya rencana lain.',lifeSaved:'NYAWA EKSTRA · SELAMAT! PILIH ARAH',
+    intro:'Oranye = tujuan. Sian = berkah. Merah = risiko dan hadiah. Blok gelap sementara memberi peringatan sebelum menjadi padat.',
+    slow:'LAMBAT',fever:'DEMAM',blessing:'BERKAH · WAKTU LAMBAT',curse:'KUTUKAN · DEMAM · +300',
+    wall:'Kamu menabrak dinding kubus besar.',obstacle:'Kamu menabrak rintangan sementara.',self:'Kamu menabrak tubuhmu sendiri.'},
+  vi:{score:'Điểm',length:'Độ dài',best:'Kỷ lục',time:'Thời gian',effect:'Hiệu ứng',pause:'TẠM DỪNG',
+    life:'Mạng',blessingLife:'PHƯỚC LÀNH · MẠNG THÊM',curseGrowth:'LỜI NGUYỀN · TĂNG +3',curseDeath:'Lời nguyền có kế hoạch khác.',lifeSaved:'MẠNG THÊM · ĐÃ CỨU! CHỌN HƯỚNG',
+    intro:'Cam = mục tiêu. Xanh lam nhạt = phước lành. Đỏ = rủi ro và phần thưởng. Khối tối tạm thời sẽ cảnh báo trước khi trở nên rắn.',
+    slow:'CHẬM',fever:'SỐT',blessing:'PHƯỚC LÀNH · THỜI GIAN CHẬM',curse:'LỜI NGUYỀN · SỐT · +300',
+    wall:'Bạn đã đâm vào thành của khối lập phương lớn.',obstacle:'Bạn đã đâm vào chướng ngại tạm thời.',self:'Bạn đã đâm vào chính cơ thể mình.'},
+  ja:{score:'スコア',length:'長さ',best:'ベスト',time:'時間',effect:'効果',pause:'ポーズ',
+    life:'ライフ',blessingLife:'祝福 · エクストラライフ',curseGrowth:'呪い · 成長 +3',curseDeath:'呪いには別の計画がありました。',lifeSaved:'エクストラライフ · 助かった！方向を選択',
+    intro:'オレンジ = 目標。シアン = 祝福。赤 = リスクと報酬。暗い一時ブロックは警告してから実体化します。',
+    slow:'スロー',fever:'フィーバー',blessing:'祝福 · スロータイム',curse:'呪い · フィーバー · +300',
+    wall:'大きなキューブの壁に衝突しました。',obstacle:'一時的な障害物に衝突しました。',self:'自分の体に衝突しました。'},
+  ko:{score:'점수',length:'길이',best:'최고',time:'시간',effect:'효과',pause:'일시정지',
+    life:'생명',blessingLife:'축복 · 추가 생명',curseGrowth:'저주 · 성장 +3',curseDeath:'저주에게는 다른 계획이 있었습니다.',lifeSaved:'추가 생명 · 생존! 방향을 선택하세요',
+    intro:'주황 = 목표. 하늘색 = 축복. 빨강 = 위험과 보상. 어두운 임시 블록은 먼저 경고한 뒤 단단해집니다.',
+    slow:'느림',fever:'열기',blessing:'축복 · 느린 시간',curse:'저주 · 열기 · +300',
+    wall:'큰 큐브의 벽에 부딪혔습니다.',obstacle:'임시 장애물에 부딪혔습니다.',self:'자신의 몸에 부딪혔습니다.'},
+  zh:{score:'分数',length:'长度',best:'纪录',time:'时间',effect:'效果',pause:'暂停',
+    life:'生命',blessingLife:'祝福 · 额外生命',curseGrowth:'诅咒 · 成长 +3',curseDeath:'诅咒另有打算。',lifeSaved:'额外生命 · 得救了！请选择方向',
+    intro:'橙色 = 目标。青色 = 祝福。红色 = 风险与奖励。深色临时方块会先警告，然后变成实体。',
+    slow:'减速',fever:'狂热',blessing:'祝福 · 时间减速',curse:'诅咒 · 狂热 · +300',
+    wall:'你撞到了大立方体的墙。',obstacle:'你撞到了临时障碍物。',self:'你撞到了自己的身体。'},
+  cs:{score:'Skóre',length:'Délka',best:'Rekord',time:'Čas',effect:'Efekt',pause:'PAUZA',
+    life:'Život',blessingLife:'POŽEHNÁNÍ · ŽIVOT NAVÍC',curseGrowth:'KLETBA · RŮST +3',curseDeath:'Kletba měla jiné plány.',lifeSaved:'ŽIVOT NAVÍC · ZACHRÁNĚN! ZVOL SMĚR',
+    intro:'Oranžová = cíl. Azurová = požehnání. Červená = riziko a odměna. Tmavé dočasné bloky nejprve varují a pak zpevní.',
+    slow:'POMALU',fever:'HOREČKA',blessing:'POŽEHNÁNÍ · ZPOMALENÍ',curse:'KLETBA · HOREČKA · +300',
+    wall:'Narazil jsi do stěny velké krychle.',obstacle:'Narazil jsi do dočasné překážky.',self:'Narazil jsi do vlastního těla.'},
+  uk:{score:'Очки',length:'Довжина',best:'Рекорд',time:'Час',effect:'Ефект',pause:'ПАУЗА',
+    life:'Життя',blessingLife:'БЛАГОСЛОВЕННЯ · ДОДАТКОВЕ ЖИТТЯ',curseGrowth:'ПРОКЛЯТТЯ · РІСТ +3',curseDeath:'У прокляття були інші плани.',lifeSaved:'ДОДАТКОВЕ ЖИТТЯ · ВРЯТОВАНО! ОБЕРІТЬ НАПРЯМОК',
+    intro:'Помаранчевий = ціль. Блакитний = благословення. Червоний = ризик і винагорода. Темні тимчасові блоки спочатку попереджають, потім стають твердими.',
+    slow:'ПОВІЛЬНО',fever:'ГАРЯЧКА',blessing:'БЛАГОСЛОВЕННЯ · СПОВІЛЬНЕННЯ',curse:'ПРОКЛЯТТЯ · ГАРЯЧКА · +300',
+    wall:'Ви врізалися у стіну великого куба.',obstacle:'Ви врізалися в тимчасову перешкоду.',self:'Ви врізалися у власне тіло.'},
+  ro:{score:'Puncte',length:'Lungime',best:'Record',time:'Timp',effect:'Efect',pause:'PAUZĂ',
+    life:'Viață',blessingLife:'BINECUVÂNTARE · VIAȚĂ EXTRA',curseGrowth:'BLESTEM · CREȘTERE +3',curseDeath:'Blestemul avea alte planuri.',lifeSaved:'VIAȚĂ EXTRA · SALVAT! ALEGE DIRECȚIA',
+    intro:'Portocaliu = obiectiv. Cyan = binecuvântare. Roșu = risc și recompensă. Blocurile întunecate temporare avertizează înainte să devină solide.',
+    slow:'ÎNCET',fever:'FEBRĂ',blessing:'BINECUVÂNTARE · TIMP LENT',curse:'BLESTEM · FEBRĂ · +300',
+    wall:'Ai lovit un perete al cubului mare.',obstacle:'Ai lovit un obstacol temporar.',self:'Ai lovit propriul corp.'}
+};
+
+let language='en';
+const tx=key=>(TEXT[language]&&TEXT[language][key])||TEXT.en[key]||key;
+
+function applyLanguage(){
+  document.documentElement.lang=language;
+  labelScore.textContent=tx('score');
+  labelLength.textContent=tx('length');
+  labelBest.textContent=tx('best');
+  labelTime.textContent=tx('time');
+  labelEffect.textContent=tx('effect');
+  labelLife.textContent=tx('life');
+  pauseMark.textContent=tx('pause');
+  if(!S.started){
+    center.querySelector('p').textContent=tx('intro');
+  }
+}
+
+let dpr=1,last=performance.now();
+let toastTimer=null;
+
+const verticalDirs={
+  KeyJ:[0,1,0,'+Y'],
+  KeyK:[0,-1,0,'−Y']
+};
+
+let cfg={
+  startSpeed:2,
+  motion:'smooth',
+  size:9,
+  zoom:2,
+  sound:true,
+  music:true
+};
+
+const S={
+  started:false,
+  paused:false,
+  over:false,
+  t:0,
+  score:0,
+  moves:0,
+  normalOrbs:0,
+  body:[],
+  prev:[],
+  dir:[0,0,1,'+Z'],
+  queued:null,
+  orb:null,
+  special:null,
+  effect:null,
+  obstacles:[],
+  nextSpecialAt:0,
+  nextObstacleAt:0,
+  clock:0,
+  yaw:.78,
+  pitch:.58,
+  best:0,
+  bestAtStart:0,
+  recordAnnounced:false,
+  extraLife:0,
+  awaitingLifeDirection:false,
+  pendingGrowth:0
+};
+
+const ORB_MARGIN=1;
+const SPEED_GAIN=.03;
+const SPEED_CAP=4.5;
+const SPECIAL_TTL=9.0;
+const EFFECT_TTL=7.0;
+const OBSTACLE_WARNING=1.15;
+const OBSTACLE_LIFETIME=10.0;
+
+const eq=(a,b)=>!!a&&!!b&&a[0]===b[0]&&a[1]===b[1]&&a[2]===b[2];
+const opp=(a,b)=>a[0]===-b[0]&&a[1]===-b[1]&&a[2]===-b[2];
+const rnd=n=>Math.floor(Math.random()*n);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const manhattan=(a,b)=>Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])+Math.abs(a[2]-b[2]);
+
+const assetUrl=p=>new URL(p,window.location.href).href;
+
+const SOUND_DATA={
+  orb:assetUrl('../sfx/orb.mp3'),
+  blessing:assetUrl('../sfx/blessing.mp3'),
+  record:assetUrl('../sfx/new_record.mp3'),
+  curse:assetUrl('../sfx/curse.mp3')
+};
+
+const MUSIC_SRC=assetUrl('../music/background.mp3');
+
+const SOUND_VOLUME={orb:.42,blessing:.55,record:.55,curse:.52};
+const SOUNDS={};
+Object.keys(SOUND_DATA).forEach(k=>{
+  try{
+    const a=new Audio(SOUND_DATA[k]);
+    a.preload='auto';
+    a.volume=SOUND_VOLUME[k]||.5;
+    SOUNDS[k]=a;
+  }catch(_){}
+});
+
+let MUSIC=null;
+try{
+  MUSIC=new Audio(MUSIC_SRC);
+  MUSIC.preload='auto';
+  MUSIC.loop=true;
+  MUSIC.volume=.15;
+}catch(_){}
+
+function startMusic(){
+  if(!cfg.music||!MUSIC||S.paused||S.over||!S.started)return;
+  try{
+    const p=MUSIC.play();
+    if(p&&p.catch)p.catch(()=>{});
+  }catch(_){}
+}
+
+function pauseMusic(){
+  if(!MUSIC)return;
+  try{MUSIC.pause();}catch(_){}
+}
+
+function resetMusic(){
+  if(!MUSIC)return;
+  try{
+    MUSIC.pause();
+    MUSIC.currentTime=0;
+  }catch(_){}
+}
+
+function playSound(name){
+  if(!cfg.sound)return;
+  const a=SOUNDS[name];
+  if(!a)return;
+  try{
+    a.pause();
+    a.currentTime=0;
+    a.volume=SOUND_VOLUME[name]||.5;
+    const p=a.play();
+    if(p&&p.catch)p.catch(()=>{});
+  }catch(_){}
+}
+
+function toast(text,color='#ffffff'){
+  eventToast.textContent=text;
+  eventToast.style.color=color;
+  eventToast.style.borderColor=color+'55';
+  eventToast.classList.add('show');
+  if(toastTimer)clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>eventToast.classList.remove('show'),1500);
+}
+
+function loadBest(){
+  try{
+    const n=Number(localStorage.getItem('voxel_anaconda_best')||0);
+    return Number.isFinite(n)&&n>0?Math.floor(n):0;
+  }catch(_){return 0}
+}
+
+function saveBest(v){
+  try{localStorage.setItem('voxel_anaconda_best',String(Math.floor(v)));}catch(_){}
+}
+
+function resize(){
+  dpr=Math.min(devicePixelRatio||1,1.6);
+  c.width=innerWidth*dpr;
+  c.height=innerHeight*dpr;
+}
+addEventListener('resize',resize);
+resize();
+
+function dragonCell(p){
+  return p[0]>=0&&p[0]<cfg.size&&
+         p[1]>=0&&p[1]<cfg.size&&
+         p[2]>=0&&p[2]<cfg.size;
+}
+
+function orbCell(p){
+  const hi=cfg.size-1-ORB_MARGIN;
+  return p[0]>=ORB_MARGIN&&p[0]<=hi&&
+         p[1]>=ORB_MARGIN&&p[1]<=hi&&
+         p[2]>=ORB_MARGIN&&p[2]<=hi;
+}
+
+function activeObstacleAt(p){
+  return S.obstacles.some(o=>S.t>=o.activeAt&&S.t<o.expiresAt&&eq(o.p,p));
+}
+
+function occupiedForSpawn(p){
+  return S.body.some(q=>eq(p,q)) ||
+         eq(p,S.orb) ||
+         (S.special&&eq(p,S.special.p)) ||
+         S.obstacles.some(o=>eq(p,o.p));
+}
+
+function randomInnerCell(minHeadDistance=0){
+  const lo=ORB_MARGIN;
+  const hi=cfg.size-1-ORB_MARGIN;
+  const span=hi-lo+1;
+  const head=S.body[0];
+  for(let k=0;k<1200;k++){
+    const p=[lo+rnd(span),lo+rnd(span),lo+rnd(span)];
+    if(!orbCell(p)||occupiedForSpawn(p))continue;
+    if(head&&manhattan(p,head)<minHeadDistance)continue;
+    return p;
+  }
+  return null;
+}
+
+function orb(){
+  const p=randomInnerCell(0);
+  if(p)S.orb=p;
+}
+
+function scheduleSpecial(){
+  S.nextSpecialAt=S.t+11+Math.random()*8;
+}
+
+function scheduleObstacle(){
+  S.nextObstacleAt=S.t+14+Math.random()*9;
+}
+
+function spawnSpecial(){
+  if(S.special)return;
+  const p=randomInnerCell(3);
+  if(!p){scheduleSpecial();return;}
+  const kind=Math.random()<.62?'blessing':'curse';
+  S.special={
+    kind,
+    p,
+    bornAt:S.t,
+    expiresAt:S.t+SPECIAL_TTL
+  };
+  scheduleSpecial();
+}
+
+function spawnObstacleWave(){
+  if(S.obstacles.length)return;
+  const count=S.normalOrbs>=12?2:1;
+  for(let i=0;i<count;i++){
+    const p=randomInnerCell(4);
+    if(!p)continue;
+    S.obstacles.push({
+      p,
+      bornAt:S.t,
+      activeAt:S.t+OBSTACLE_WARNING,
+      expiresAt:S.t+OBSTACLE_LIFETIME
+    });
+  }
+  scheduleObstacle();
+}
+
+function reset(){
+  const m=Math.floor(cfg.size/2);
+  S.started=false;
+  S.paused=false;
+  S.over=false;
+  S.t=0;
+  S.score=0;
+  S.moves=0;
+  S.normalOrbs=0;
+  S.clock=0;
+  S.dir=[0,0,1,'+Z'];
+  S.queued=null;
+  S.body=[[m,m,m],[m,m,m-1]];
+  S.prev=S.body.map(p=>p.slice());
+  S.special=null;
+  S.effect=null;
+  S.obstacles=[];
+  S.best=loadBest();
+  S.bestAtStart=S.best;
+  S.recordAnnounced=false;
+  S.extraLife=0;
+  S.awaitingLifeDirection=false;
+  S.pendingGrowth=0;
+  resetMusic();
+  scheduleSpecial();
+  scheduleObstacle();
+  orb();
+  center.classList.remove('hide');
+  center.querySelector('h1').textContent='VOXEL ANACONDA';
+  center.querySelector('p').textContent=tx('intro');
+  eventToast.classList.remove('show');
+  hud();
+}
+
+function vsub(a,b){return[a[0]-b[0],a[1]-b[1],a[2]-b[2]]}
+function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]}
+function cross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+function norm(a){const l=Math.hypot(...a)||1;return a.map(v=>v/l)}
+
+function camera(){
+  const n=cfg.size;
+  const target=[(n-1)/2,(n-1)/2,(n-1)/2];
+  const yaw=S.yaw;
+  const p=S.pitch;
+  const effectiveZoom=1+(cfg.zoom-1)*0.55;
+  const dist=(n*2.2+5)/effectiveZoom;
+  const pos=[
+    target[0]+Math.cos(p)*Math.sin(yaw)*dist,
+    target[1]+Math.sin(p)*dist,
+    target[2]+Math.cos(p)*Math.cos(yaw)*dist
+  ];
+  const f=norm(vsub(target,pos));
+  const r=norm(cross(f,[0,1,0]));
+  const u=norm(cross(r,f));
+  return{pos,f,r,u,F:Math.min(c.width,c.height)*.82};
+}
+
+function horizontalAxesFromCamera(){
+  const C=camera();
+
+  let rx=C.r[0],rz=C.r[2];
+  let right;
+  if(Math.abs(rx)>=Math.abs(rz)) right=[Math.sign(rx)||1,0,0,''];
+  else right=[0,0,Math.sign(rz)||1,''];
+
+  let fx=C.u[0],fz=C.u[2];
+  let forward;
+  if(Math.abs(fx)>=Math.abs(fz)) forward=[Math.sign(fx)||1,0,0,''];
+  else forward=[0,0,Math.sign(fz)||1,''];
+
+  if((right[0]!==0&&forward[0]!==0)||(right[2]!==0&&forward[2]!==0)){
+    if(right[0]!==0) forward=[0,0,-right[0],''];
+    else forward=[right[2],0,0,''];
+  }
+
+  const label=v=>{
+    if(v[0]===1)return'+X';
+    if(v[0]===-1)return'−X';
+    if(v[2]===1)return'+Z';
+    if(v[2]===-1)return'−Z';
+    return'';
+  };
+
+  right[3]=label(right);
+  forward[3]=label(forward);
+
+  const left=[-right[0],0,-right[2],label([-right[0],0,-right[2]])];
+  const back=[-forward[0],0,-forward[2],label([-forward[0],0,-forward[2]])];
+
+  return{KeyW:forward,KeyS:back,KeyA:left,KeyD:right};
+}
+
+function dirForKey(code){
+  if(verticalDirs[code])return verticalDirs[code];
+  return horizontalAxesFromCamera()[code]||null;
+}
+
+
+function directionIsSafe(v){
+  const h=S.body[0];
+  const n=[h[0]+v[0],h[1]+v[1],h[2]+v[2]];
+  if(!dragonCell(n))return false;
+  if(activeObstacleAt(n))return false;
+
+  const eatNormal=eq(n,S.orb);
+  const chk=eatNormal?S.body:S.body.slice(0,-1);
+  return !chk.some(p=>eq(p,n));
+}
+
+function queue(v){
+  if(S.over)return;
+
+  if(S.awaitingLifeDirection){
+    if(!directionIsSafe(v))return;
+    S.dir=v.slice();
+    S.queued=null;
+    S.awaitingLifeDirection=false;
+    center.classList.add('hide');
+    startMusic();
+    return;
+  }
+
+  if(!S.started){
+    S.started=true;
+    S.dir=v.slice();
+    S.queued=null;
+
+    const h=S.body[0];
+    S.body=[
+      h.slice(),
+      [h[0]-v[0],h[1]-v[1],h[2]-v[2]]
+    ];
+    S.prev=S.body.map(p=>p.slice());
+
+    center.classList.add('hide');
+    startMusic();
+    return;
+  }
+
+  if(!opp(v,S.dir))S.queued=v;
+}
+
+function checkRecord(){
+  // Durante la partida solo reflejamos visualmente la mejor marca provisional.
+  // La campana y el guardado definitivo ocurren al terminar la partida.
+  if(S.score>S.best){
+    S.best=S.score;
+  }
+}
+
+function currentBaseSpeed(){
+  const cap=Math.max(SPEED_CAP,cfg.startSpeed);
+  return Math.min(cfg.startSpeed+S.normalOrbs*SPEED_GAIN,cap);
+}
+
+function effectiveSpeed(){
+  let s=currentBaseSpeed();
+  if(S.effect&&S.t<S.effect.until){
+    if(S.effect.kind==='slow')s*=.72;
+    if(S.effect.kind==='fever')s*=1.45;
+  }
+  return clamp(s,.65,8);
+}
+
+function collectSpecial(){
+  if(!S.special)return;
+  const kind=S.special.kind;
+  S.special=null;
+
+  if(kind==='blessing'){
+    S.score+=150;
+
+    // Lotería buena:
+    // 35% vida extra (si ya tienes una, cae en tiempo lento).
+    const wantsLife=Math.random()<.35;
+
+    if(wantsLife&&S.extraLife<1){
+      S.extraLife=1;
+      S.effect=null;
+      playSound('blessing');
+      toast(tx('blessingLife'),'#72e5ff');
+    }else{
+      S.effect={kind:'slow',until:S.t+EFFECT_TTL};
+      playSound('blessing');
+      toast(tx('blessing'),'#72e5ff');
+    }
+  }else{
+    // El rojo siempre paga +300, incluso si sale la peor papeleta.
+    S.score+=300;
+    checkRecord();
+
+    const roll=Math.random();
+
+    // 8%: muerte instantánea por pura mala suerte.
+    if(roll<.08){
+      playSound('curse');
+      toast(tx('curseDeath'),'#ff6b72');
+      die(tx('curseDeath'),{curseLottery:'instantDeath'});
+      return;
+    }
+
+    // 22%: crecer tres segmentos durante los próximos movimientos.
+    if(roll<.30){
+      S.pendingGrowth+=3;
+      playSound('curse');
+      toast(tx('curseGrowth'),'#ff6b72');
+    }else{
+      // 70%: fiebre.
+      S.effect={kind:'fever',until:S.t+EFFECT_TTL};
+      playSound('curse');
+      toast(tx('curse'),'#ff6b72');
+    }
+  }
+
+  checkRecord();
+  hud();
+}
+
+function die(msg,details={}){
+  if(S.extraLife>0){
+    S.extraLife=0;
+    S.awaitingLifeDirection=true;
+    S.clock=0;
+    S.queued=null;
+    S.effect=null;
+    center.classList.add('hide');
+    pauseMusic();
+    playSound('blessing');
+    toast(tx('lifeSaved'),'#72e5ff');
+    hud();
+    return;
+  }
+
+  S.over=true;
+  S.paused=false;
+  center.classList.add('hide');
+  pauseMusic();
+
+  const newRecord=S.bestAtStart>0 && S.score>S.bestAtStart;
+
+  if(S.score>S.bestAtStart){
+    S.best=S.score;
+    saveBest(S.best);
+  }else{
+    S.best=S.bestAtStart;
+  }
+
+  if(newRecord&&!S.recordAnnounced){
+    S.recordAnnounced=true;
+    // La campana de nuevo récord pertenece al cierre de la partida.
+    setTimeout(()=>playSound('record'),180);
+  }
+
+  try{
+    if(window.FlutterGame && window.FlutterGame.postMessage){
+      window.FlutterGame.postMessage(JSON.stringify({
+        type:'gameOver',
+        message:msg,
+        score:S.score,
+        best:S.best,
+        newRecord:newRecord,
+        length:S.body.length,
+        moves:S.moves,
+        head:S.body[0],
+        ...details
+      }));
+    }
+  }catch(_){}
+}
+
+function step(){
+  S.prev=S.body.map(p=>p.slice());
+
+  if(S.queued&&!opp(S.queued,S.dir))S.dir=S.queued;
+  S.queued=null;
+
+  const h=S.body[0];
+  const n=[h[0]+S.dir[0],h[1]+S.dir[1],h[2]+S.dir[2]];
+
+  if(!dragonCell(n)){
+    die(tx('wall'),{attempted:n});
+    return;
+  }
+
+  if(activeObstacleAt(n)){
+    die(tx('obstacle'),{attempted:n});
+    return;
+  }
+
+  const eatNormal=eq(n,S.orb);
+  const eatSpecial=!!S.special&&eq(n,S.special.p);
+  const chk=eatNormal?S.body:S.body.slice(0,-1);
+
+  if(chk.some(p=>eq(p,n))){
+    die(tx('self'),{attempted:n});
+    return;
+  }
+
+  S.body.unshift(n);
+  S.moves++;
+
+  if(eatNormal){
+    S.normalOrbs++;
+    S.score+=100+S.body.length*5;
+    playSound('orb');
+    orb();
+  }else if(S.pendingGrowth>0){
+    S.pendingGrowth--;
+  }else{
+    S.body.pop();
+  }
+
+  if(eatSpecial)collectSpecial();
+
+  S.score++;
+  checkRecord();
+  hud();
+}
+
+function updateWorldEvents(){
+  if(S.special&&S.t>=S.special.expiresAt){
+    S.special=null;
+  }
+
+  if(S.effect&&S.t>=S.effect.until){
+    S.effect=null;
+  }
+
+  S.obstacles=S.obstacles.filter(o=>S.t<o.expiresAt);
+
+  if(!S.special&&S.t>=S.nextSpecialAt){
+    spawnSpecial();
+  }
+
+  if(S.obstacles.length===0&&S.t>=S.nextObstacleAt){
+    spawnObstacleWave();
+  }
+}
+
+function update(dt){
+  if(!S.started||S.paused||S.over||S.awaitingLifeDirection)return;
+
+  S.t+=dt;
+  updateWorldEvents();
+  S.clock+=dt*effectiveSpeed();
+
+  while(S.clock>=1&&!S.over){
+    S.clock--;
+    step();
+  }
+
+  hud();
+}
+
+function hud(){
+  scoreE.textContent=S.score;
+  lenE.textContent=S.body.length;
+  bestE.textContent=Math.max(S.best,S.score);
+  lifePill.style.display=S.extraLife>0?'block':'none';
+  lifeE.textContent=S.extraLife>0?'♥':'';
+  const s=Math.floor(S.t);
+  timeE.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+
+  if(S.effect&&S.t<S.effect.until){
+    const left=Math.max(0,Math.ceil(S.effect.until-S.t));
+    effectPill.style.display='block';
+    effectE.textContent=S.effect.kind==='slow'
+      ? `${tx('slow')} ${left}s`
+      : `${tx('fever')} ${left}s`;
+    effectE.style.color=S.effect.kind==='slow'?'#72e5ff':'#ff737b';
+  }else{
+    effectPill.style.display='none';
+  }
+}
+
+function proj(p,C){
+  const q=vsub(p,C.pos);
+  const z=dot(q,C.f);
+  if(z<=.2)return null;
+  const s=C.F/z;
+  return[
+    c.width/2+dot(q,C.r)*s,
+    c.height/2-dot(q,C.u)*s,
+    z,s
+  ];
+}
+
+function line(a,b,C,col,w=1){
+  const A=proj(a,C),B=proj(b,C);
+  if(!A||!B)return;
+  x.strokeStyle=col;
+  x.lineWidth=w*dpr;
+  x.beginPath();
+  x.moveTo(A[0],A[1]);
+  x.lineTo(B[0],B[1]);
+  x.stroke();
+}
+
+function grid(C){
+  const N=cfg.size;
+  const lo=-.5,hi=N-.5;
+  const vs=[
+    [lo,lo,lo],[hi,lo,lo],[hi,hi,lo],[lo,hi,lo],
+    [lo,lo,hi],[hi,lo,hi],[hi,hi,hi],[lo,hi,hi]
+  ];
+  const ed=[
+    [0,1],[1,2],[2,3],[3,0],
+    [4,5],[5,6],[6,7],[7,4],
+    [0,4],[1,5],[2,6],[3,7]
+  ];
+
+  ed.forEach(e=>line(vs[e[0]],vs[e[1]],C,'#9fb8ff88',1.7));
+
+  for(let i=0;i<N;i++){
+    const col='rgba(120,150,235,.13)';
+    line([i,lo,lo],[i,lo,hi],C,col);
+    line([lo,lo,i],[hi,lo,i],C,col);
+    line([i,lo,hi],[i,hi,hi],C,col);
+    line([lo,i,hi],[hi,i,hi],C,col);
+    line([lo,i,lo],[lo,i,hi],C,col);
+    line([lo,lo,i],[lo,hi,i],C,col);
+  }
+}
+
+function planePatch(points,C,fill,stroke){
+  const ps=points.map(p=>proj(p,C));
+  if(ps.some(v=>!v)) return;
+
+  x.save();
+  x.fillStyle=fill;
+  x.strokeStyle=stroke;
+  x.lineWidth=1.1*dpr;
+  x.beginPath();
+  x.moveTo(ps[0][0],ps[0][1]);
+  for(let i=1;i<ps.length;i++)x.lineTo(ps[i][0],ps[i][1]);
+  x.closePath();
+  x.fill();
+  x.stroke();
+  x.restore();
+}
+
+function locatorShadows(head,C){
+  const wall=cfg.size-.5;
+  const floor=-.5;
+  const r=.34;
+  const hx=head[0],hy=head[1],hz=head[2];
+
+  planePatch(
+    [[hx-r,floor,hz-r],[hx+r,floor,hz-r],[hx+r,floor,hz+r],[hx-r,floor,hz+r]],
+    C,
+    'rgba(255,180,90,.18)',
+    'rgba(255,205,132,.38)'
+  );
+
+  planePatch(
+    [[wall,hy-r,hz-r],[wall,hy+r,hz-r],[wall,hy+r,hz+r],[wall,hy-r,hz+r]],
+    C,
+    'rgba(115,176,255,.15)',
+    'rgba(170,208,255,.34)'
+  );
+
+  planePatch(
+    [[hx-r,hy-r,wall],[hx+r,hy-r,wall],[hx+r,hy+r,wall],[hx-r,hy+r,wall]],
+    C,
+    'rgba(115,176,255,.13)',
+    'rgba(170,208,255,.32)'
+  );
+
+  // Guías muy sutiles hacia las tres proyecciones.
+  line(head,[hx,floor,hz],C,'rgba(255,196,120,.10)',.8);
+  line(head,[wall,hy,hz],C,'rgba(140,190,255,.08)',.8);
+  line(head,[hx,hy,wall],C,'rgba(140,190,255,.08)',.8);
+
+  const q=proj(head,C);
+  if(q){
+    const R=Math.max(5*dpr,q[3]*.12);
+    x.save();
+    x.fillStyle='rgba(255,255,255,.86)';
+    x.beginPath();
+    x.arc(q[0],q[1],R,0,Math.PI*2);
+    x.fill();
+    x.restore();
+  }
+}
+
+function interp(i){
+  if(cfg.motion==='snap'||!S.started)return S.body[i];
+
+  const t=Math.min(1,S.clock);
+  const e=t*t*(3-2*t);
+  const a=S.prev[i]||S.body[i];
+  const b=S.body[i];
+
+  return[
+    a[0]+(b[0]-a[0])*e,
+    a[1]+(b[1]-a[1])*e,
+    a[2]+(b[2]-a[2])*e
+  ];
+}
+
+function cube(p,C,s,fill,stroke){
+  const h=s/2;
+
+  const vs=[
+    [-h,-h,-h],[h,-h,-h],[h,h,-h],[-h,h,-h],
+    [-h,-h,h],[h,-h,h],[h,h,h],[-h,h,h]
+  ].map(v=>[p[0]+v[0],p[1]+v[1],p[2]+v[2]]);
+
+  const ps=vs.map(v=>proj(v,C));
+  const fs=[
+    [0,1,2,3],[4,5,6,7],[0,1,5,4],
+    [2,3,7,6],[1,2,6,5],[0,3,7,4]
+  ];
+  const ds=[];
+
+  fs.forEach(f=>{
+    if(f.every(i=>ps[i])){
+      ds.push([f,f.reduce((q,i)=>q+ps[i][2],0)/4]);
+    }
+  });
+
+  ds.sort((a,b)=>b[1]-a[1]);
+
+  ds.forEach(([f])=>{
+    x.fillStyle=fill;
+    x.strokeStyle=stroke;
+    x.lineWidth=dpr;
+    x.beginPath();
+    x.moveTo(ps[f[0]][0],ps[f[0]][1]);
+    for(let j=1;j<4;j++)x.lineTo(ps[f[j]][0],ps[f[j]][1]);
+    x.closePath();
+    x.fill();
+    x.stroke();
+  });
+}
+
+function sphere(p,C,r,inner='#fffbd1',outer='#ff8617',alpha=1){
+  const q=proj(p,C);
+  if(!q)return;
+
+  const R=Math.max(3*dpr,r*q[3]);
+  const g=x.createRadialGradient(
+    q[0]-R*.3,q[1]-R*.3,R*.1,
+    q[0],q[1],R
+  );
+
+  g.addColorStop(0,inner);
+  g.addColorStop(1,outer);
+
+  x.save();
+  x.globalAlpha=alpha;
+  x.fillStyle=g;
+  x.beginPath();
+  x.arc(q[0],q[1],R,0,Math.PI*2);
+  x.fill();
+  x.restore();
+}
+
+function pulseAlpha(expiresAt){
+  const left=expiresAt-S.t;
+  if(left>2)return 1;
+  return .30+.70*(.5+.5*Math.sin(S.t*18));
+}
+
+function draw(){
+  const g=x.createLinearGradient(0,0,0,c.height);
+  g.addColorStop(0,'#111a31');
+  g.addColorStop(1,'#03050b');
+  x.fillStyle=g;
+  x.fillRect(0,0,c.width,c.height);
+
+  const C=camera();
+
+  grid(C);
+
+  const headPos=interp(0);
+  locatorShadows(headPos,C);
+
+  const list=[];
+
+  S.body.forEach((_,i)=>{
+    const p=interp(i);
+    const q=proj(p,C);
+    if(q)list.push([q[2],i?'b':'h',p,i,null]);
+  });
+
+  const oq=proj(S.orb,C);
+  if(oq)list.push([oq[2],'normal',S.orb,0,null]);
+
+  if(S.special){
+    const sq=proj(S.special.p,C);
+    if(sq)list.push([sq[2],S.special.kind,S.special.p,0,S.special]);
+  }
+
+  S.obstacles.forEach(o=>{
+    const q=proj(o.p,C);
+    if(q)list.push([q[2],'obstacle',o.p,0,o]);
+  });
+
+  list.sort((a,b)=>b[0]-a[0]);
+
+  list.forEach(it=>{
+    const type=it[1];
+    const p=it[2];
+    const meta=it[4];
+
+    if(type==='normal'){
+      sphere(p,C,.23,'#fffbd1','#ff8617',1);
+    }else if(type==='blessing'){
+      const pulse=.25+.06*Math.sin(S.t*6);
+      sphere(p,C,pulse,'#f7ffff','#35cfff',pulseAlpha(meta.expiresAt));
+    }else if(type==='curse'){
+      const pulse=.25+.06*Math.sin(S.t*7);
+      sphere(p,C,pulse,'#fff2f2','#ff2636',pulseAlpha(meta.expiresAt));
+    }else if(type==='obstacle'){
+      const warning=S.t<meta.activeAt;
+      const dying=meta.expiresAt-S.t<2;
+      const visible=warning
+        ? (Math.sin(S.t*20)>-.1)
+        : (!dying||Math.sin(S.t*16)>-.45);
+
+      if(visible){
+        cube(
+          p,C,
+          warning?.76:.82,
+          warning?'rgba(90,98,116,.18)':'rgba(32,36,47,.90)',
+          warning?'rgba(255,90,96,.70)':'rgba(138,148,169,.80)'
+        );
+      }
+    }else{
+      cube(
+        p,
+        C,
+        type==='h'?.72:.60*(1-it[3]/S.body.length*.32),
+        type==='h'?'#ed5925ee':'#d94b2ddd',
+        '#ffc070cc'
+      );
+    }
+  });
+
+  pauseMark.style.opacity=S.paused?'0.22':'0';
+}
+
+function loop(now){
+  const dt=Math.min(.04,(now-last)/1000||0);
+  last=now;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+
+window.VoxelAnaconda={
+  move(key){
+    const code='Key'+String(key).toUpperCase();
+    const v=dirForKey(code);
+    if(v)queue(v);
+  },
+  setPaused(value){
+    S.paused=!!value;
+    if(S.paused)pauseMusic();
+    else startMusic();
+  },
+  cameraDelta(){
+    // Cámara deliberadamente fija.
+  },
+  setZoom(value){
+    cfg.zoom=clamp(Number(value)||1,.60,2.20);
+  },
+  setSpeed(value){
+    cfg.startSpeed=clamp(Number(value)||2,1,8);
+  },
+  setSoundEnabled(value){
+    cfg.sound=!!value;
+  },
+  setMusicEnabled(value){
+    cfg.music=!!value;
+    if(cfg.music)startMusic();
+    else pauseMusic();
+  },
+  setLanguage(code){
+    const normalized=String(code||'en').toLowerCase().split('-')[0];
+    language=TEXT[normalized]?normalized:'en';
+    applyLanguage();
+  },
+  reset(){
+    reset();
+  },
+  state(){
+    return{
+      paused:S.paused,
+      over:S.over,
+      score:S.score,
+      best:S.best,
+      length:S.body.length,
+      moves:S.moves,
+      normalOrbs:S.normalOrbs,
+      baseSpeed:currentBaseSpeed(),
+      effectiveSpeed:effectiveSpeed(),
+      head:S.body[0],
+      dir:S.dir,
+      special:S.special,
+      effect:S.effect,
+      obstacles:S.obstacles,
+      extraLife:S.extraLife,
+      awaitingLifeDirection:S.awaitingLifeDirection,
+      pendingGrowth:S.pendingGrowth,
+      zoom:cfg.zoom,
+      sound:cfg.sound,
+      music:cfg.music
+    };
+  }
+};
+
+reset();
+applyLanguage();
+requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>

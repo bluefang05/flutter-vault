@@ -1,0 +1,30 @@
+VOXEL ANACONDA — v1.4 MEDIA & BRANDING · API 21
+
+ESTE ZIP SE DESCOMPRIME ENCIMA DEL PROYECTO.
+
+NOVEDADES
+- Música ambiental comprimida a 96 kbps.
+- Música se inicia con el primer movimiento.
+- Música pausa/reanuda con la partida.
+- Música se detiene al terminar para dejar espacio al sonido de récord.
+- Ajustes separados:
+  * Sonidos del juego.
+  * Música de fondo.
+- Los cuatro SFX se recomprimieron a 96 kbps.
+- Eliminamos las copias Base64: ahora cada audio existe una sola vez.
+- Icono Android de Voxel Anaconda en todos los mipmap principales.
+- Icono Play Store 512x512 en play_store_assets/.
+- Referencias de arte en design_reference/; NO se incluyen en el APK.
+- Nombre visible Android: Voxel Anaconda.
+
+SIGUE SIENDO API 21.
+SE MANTIENE EL STACK ANDROID/ADMOB DE LA VERSIÓN ANTERIOR.
+
+PARA PROBAR
+flutter clean
+Remove-Item pubspec.lock -ErrorAction SilentlyContinue
+flutter pub get
+flutter run --release
+
+NOTA
+La primera compilación puede tardar si Gradle necesita resolver dependencias.

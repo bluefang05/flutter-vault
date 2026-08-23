@@ -1,0 +1,30 @@
+VOXEL ANACONDA v1.6.1 — COMPILE FIX
+
+Corrección:
+- lib/main.dart líneas del diccionario español:
+  * tagline
+  * modeLine
+
+En v1.5/v1.6 quedaron accidentalmente como llamadas t(...) dentro del mapa
+constante de traducciones. Dart intentaba resolver t() en ámbito global y
+fallaba con:
+  Method not found: 't'
+
+Ahora vuelven a ser literales de texto.
+
+No se cambió:
+- gameplay
+- lotería de bendiciones/maldiciones
+- vida extra
+- 18 idiomas
+- música/SFX
+- AdMob
+- API 21
+- AGP / Gradle / Kotlin
+
+Validaciones locales:
+- no quedan llamadas t() dentro de la tabla de traducciones;
+- sintaxis JavaScript: OK;
+- comprobación básica de delimitadores Dart: OK.
+
+No se ejecutó Flutter compile en este entorno.

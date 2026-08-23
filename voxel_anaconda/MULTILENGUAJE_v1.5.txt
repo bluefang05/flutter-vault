@@ -1,0 +1,43 @@
+VOXEL ANACONDA v1.5 — MULTILENGUAJE
+
+IDIOMAS INCLUIDOS (18)
+- English
+- Español
+- Português
+- Français
+- Deutsch
+- Italiano
+- Nederlands
+- Polski
+- Русский
+- Türkçe
+- Bahasa Indonesia
+- Tiếng Việt
+- 日本語
+- 한국어
+- 中文
+- Čeština
+- Українська
+- Română
+
+COMPORTAMIENTO
+- Al iniciar, usa automáticamente el idioma del dispositivo si está soportado.
+- Si el idioma del dispositivo no está en la lista, usa English.
+- En Ajustes aparece "Automático (dispositivo)".
+- El usuario puede seleccionar manualmente cualquiera de los 18 idiomas.
+- El cambio afecta:
+  * menú;
+  * ajustes;
+  * pausa;
+  * Game Over;
+  * mensajes de récord;
+  * HUD dentro del juego;
+  * bendiciones y maldiciones;
+  * mensajes de colisión.
+- No se añadió ningún plugin nuevo para idiomas.
+
+NOTA
+La selección manual se mantiene durante la sesión actual.
+Al cerrar y volver a abrir la app vuelve a "Automático (dispositivo)".
+Si más adelante queremos persistir la selección entre sesiones, se puede añadir
+persistencia local en una fase posterior.

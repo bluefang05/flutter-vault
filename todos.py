@@ -2,20 +2,28 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from dump_flutter import main
+from _dump_common import main
 
 
 PROJECTS = [
+    ("adapa kr", "adapa_kr"),
     ("biblia 73", "Biblia Catolica 73"),
+    ("brote cero", "brote_cero"),
+    ("casileo", "casileo"),
+    ("conove", "conove"),
     ("deapoco", "deapoco"),
+    ("grapa", "grapa"),
+    ("haciendo", "Haciendo"),
     ("hocicos", "hocicos"),
     ("inhala", "inhala"),
     ("mesenti", "mesenti"),
     ("nbnd", "nbnd"),
+    ("pymerd", "pymerd"),
     ("sefeliz", "sefeliz"),
     ("siyase", "siyase"),
     ("soysomos", "soysomos"),
     ("teleo", "teleo"),
+    ("voxel anaconda", "voxel_anaconda"),
 ]
 
 

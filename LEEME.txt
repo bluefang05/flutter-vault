@@ -1,0 +1,18 @@
+CasiLeo - selector de idiomas funcional
+
+Reemplaza lib/main.dart con el archivo incluido.
+
+Incluye:
+- Idioma del dispositivo
+- Español
+- English
+- Français
+- Português (Brasil)
+- Deutsch
+- Cambio inmediato
+- Preferencia guardada con SharedPreferences
+
+Después ejecuta:
+flutter clean
+flutter pub get
+flutter run --release

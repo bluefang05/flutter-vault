@@ -1,0 +1,24 @@
+PYME RD - INTEGRACION ADMOB
+
+App ID Android:
+ca-app-pub-3322493998376707~6779988736
+
+Banner inferior real:
+ca-app-pub-3322493998376707/1982957622
+
+Banner de prueba usado por defecto:
+ca-app-pub-3940256099942544/6300978111
+
+SEGURIDAD
+- flutter run, flutter run --release y los APK normales usan anuncios de prueba.
+- El banner real solo se activa al ejecutar COMPILAR_AAB_PYMERD.ps1.
+- No pulses tus propios anuncios reales.
+- El banner solo aparece en Hoy, Citas y Clientes.
+- No aparece en Operaciones, Caja, Reportes, fotos, consentimientos,
+  exportación ni restauración.
+
+COMPATIBILIDAD
+- google_mobile_ads queda fijado exactamente en 5.3.1.
+- Esa rama usa Google Mobile Ads SDK Android 23.6.0 y conserva minSdk 21.
+- No actualices el paquete automáticamente a 6.x o superior mientras PYME RD
+  deba seguir instalándose en Android API 21.

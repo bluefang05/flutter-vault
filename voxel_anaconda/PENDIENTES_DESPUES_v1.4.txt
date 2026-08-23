@@ -1,0 +1,51 @@
+VOXEL ANACONDA — PENDIENTES DESPUÉS DE v1.4
+
+YA RESUELTO EN v1.4
+[x] Icono Android.
+[x] Icono 512x512 para Play Store.
+[x] Música de fondo comprimida a 96 kbps e integrada.
+[x] Interruptor independiente Música sí/no.
+[x] SFX recomprimidos a 96 kbps.
+[x] Eliminada la duplicación Base64 de los sonidos dentro del HTML.
+[x] Los sonidos ahora existen una sola vez como assets.
+[x] Referencias visuales de cabeza/cuerpo guardadas fuera del APK.
+[x] Cámara fija.
+[x] Sombras/localizadores espaciales.
+[x] Bendiciones, maldiciones, obstáculos temporales.
+[x] Velocidad progresiva.
+[x] Récord y campana al terminar.
+
+SIGUE PENDIENTE
+[ ] Aplicar el nuevo estilo/texturas de caja a la cabeza dentro del juego.
+[ ] Aplicar textura/patrón coherente a los segmentos del cuerpo.
+[ ] Decidir si la boca/cabeza tendrá una animación mínima.
+[ ] Probar balance de frecuencia de bendiciones/maldiciones/obstáculos.
+[ ] Probar volumen final de música vs. efectos en teléfono real.
+[ ] Elegir el/los modos de juego adicionales.
+[ ] Definir package/applicationId final antes de publicar.
+[ ] Configurar firma release real para Play Store.
+[ ] Guardar evidencia/licencias de cada audio antes de publicar.
+[ ] Preparar gráfico de funciones y capturas de Play Store.
+
+
+AÑADIDO EN v1.5
+[x] Multilenguaje de interfaz y motor del juego.
+[x] Detección automática del idioma del dispositivo.
+[x] Selector manual de idioma en Ajustes.
+[x] 18 idiomas sin dependencias adicionales.
+
+PENDIENTE OPCIONAL
+[ ] Persistir la selección manual de idioma entre reinicios de la app.
+
+
+CIERRE v1.6 — TESTER CANDIDATE
+[x] Bendiciones como lotería.
+[x] Vida extra.
+[x] Maldiciones como lotería.
+[x] 8% aprox. de muerte instantánea roja.
+[x] Crecimiento +3 como resultado rojo.
+[x] Todos los nuevos mensajes en 18 idiomas.
+
+A PARTIR DE AQUÍ
+No añadir sistemas nuevos antes del feedback de testers salvo que aparezca
+un bug que impida jugar.

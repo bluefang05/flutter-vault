@@ -1,0 +1,26 @@
+VOXEL ANACONDA v1.6.2 — PACKAGE FINAL
+
+PACKAGE / APPLICATION ID
+com.enmanuelapps.voxelanaconda
+
+Prefijo de marca:
+com.enmanuelapps.
+
+Se sustituyó:
+com.example.voxel_anaconda
+
+CAMBIOS
+- namespace = "com.enmanuelapps.voxelanaconda"
+- applicationId = "com.enmanuelapps.voxelanaconda"
+- nueva MainActivity:
+  android/app/src/main/kotlin/com/enmanuelapps/voxelanaconda/MainActivity.kt
+- script APLICAR_PACKAGE_FINAL.ps1 para retirar la MainActivity antigua si
+  todavía existe en el proyecto.
+
+IMPORTANTE
+Google Play considera el applicationId la identidad permanente de la app.
+Si esta será la ficha definitiva de Voxel Anaconda, conviene publicarla desde
+el principio con este identificador.
+
+AdMob: sin cambios.
+API mínima: 21.

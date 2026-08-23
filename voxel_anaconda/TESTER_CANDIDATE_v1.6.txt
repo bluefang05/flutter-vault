@@ -1,0 +1,53 @@
+VOXEL ANACONDA v1.6 — TESTER CANDIDATE 1
+
+ALCANCE CERRADO PARA LA PRIMERA RONDA DE TESTING.
+
+NUEVO EN ESTA VERSIÓN
+
+BENDICIÓN CELESTE = LOTERÍA BUENA
+- Siempre da +150 puntos.
+- 65% aprox.: Tiempo lento durante 7 segundos.
+- 35% aprox.: Vida extra.
+- Máximo 1 vida extra acumulada.
+- Si ya tienes una vida, una bendición que habría dado otra vida se convierte
+  en Tiempo lento.
+
+VIDA EXTRA
+- Se muestra en el HUD con un corazón.
+- Salva de:
+  * pared;
+  * cuerpo propio;
+  * obstáculo;
+  * muerte instantánea de una maldición.
+- Al salvarte, el juego se queda quieto.
+- Debes elegir una dirección segura para continuar.
+- No te obliga a seguir inmediatamente hacia la causa de la muerte.
+
+MALDICIÓN ROJA = LOTERÍA FEA
+- Siempre da +300 puntos.
+- 70% aprox.: Fiebre / velocidad x1.45 durante 7 segundos.
+- 22% aprox.: Crecimiento de +3 segmentos.
+- 8% aprox.: Muerte instantánea.
+- La muerte instantánea mantiene los +300 puntos antes de morir.
+- Si tienes una vida extra, la vida te salva incluso de esa papeleta.
+
+MULTILENGUAJE
+Los nombres y resultados nuevos están traducidos en los mismos 18 idiomas:
+English, Español, Português, Français, Deutsch, Italiano, Nederlands, Polski,
+Русский, Türkçe, Bahasa Indonesia, Tiếng Việt, 日本語, 한국어, 中文, Čeština,
+Українська y Română.
+
+RECOMENDACIÓN
+NO añadir más mecánicas antes de recibir feedback de testers.
+
+QUÉ OBSERVAR EN TESTING
+1. ¿Entienden rápidamente qué significa naranja/celeste/rojo?
+2. ¿Las sombras permiten saber dónde está la cabeza?
+3. ¿Los controles se sienten naturales?
+4. ¿La aceleración gradual se siente justa?
+5. ¿Los obstáculos avisan con suficiente tiempo?
+6. ¿La maldición de muerte instantánea resulta graciosa o irritante?
+7. ¿La vida extra se entiende cuando salva?
+8. ¿Música y sonidos tienen buen volumen?
+9. ¿Algún idioma rompe botones o paneles?
+10. ¿Quieren jugar otra partida al morir?
