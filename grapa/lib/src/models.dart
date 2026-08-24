@@ -37,8 +37,15 @@ class Mission {
 }
 
 class MissionDraft {
-  const MissionDraft(this.title, this.subtitle);
+  const MissionDraft(
+    this.title,
+    this.subtitle, {
+    this.categoryAsset,
+    this.color,
+  });
 
   final String title;
   final String subtitle;
+  final String? categoryAsset;
+  final Color? color;
 }

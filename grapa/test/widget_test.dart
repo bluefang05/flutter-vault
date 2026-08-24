@@ -4,13 +4,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:grapa/main.dart';
 
+Future<void> pumpGrapa(WidgetTester tester, {bool showAds = false}) async {
+  tester.view.physicalSize = const Size(800, 1600);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(() {
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
+  await tester.pumpWidget(GrapaApp(showAds: showAds));
+}
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
 
   testWidgets('muestra y completa las misiones del día', (tester) async {
-    await tester.pumpWidget(const GrapaApp(showAds: false));
+    await pumpGrapa(tester);
 
     expect(find.text('Tu aventura de hoy'), findsOneWidget);
     expect(find.text('Preparar presentación'), findsOneWidget);
@@ -24,7 +34,7 @@ void main() {
   });
 
   testWidgets('permite navegar al rincón de Pin', (tester) async {
-    await tester.pumpWidget(const GrapaApp(showAds: false));
+    await pumpGrapa(tester);
 
     await tester.tap(find.text('Pin'));
     await tester.pumpAndSettle();
@@ -36,7 +46,7 @@ void main() {
   testWidgets('no cobra dos veces si Pin ya está comiendo', (tester) async {
     SharedPreferences.setMockInitialValues({'coins': 50, 'pin_hearts': 3});
 
-    await tester.pumpWidget(const GrapaApp(showAds: false));
+    await pumpGrapa(tester);
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Pin'));
@@ -62,7 +72,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({'coins': 50, 'pin_hearts': 5});
 
-    await tester.pumpWidget(const GrapaApp(showAds: false));
+    await pumpGrapa(tester);
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Pin'));
@@ -88,7 +98,7 @@ void main() {
       'pin_hearts': 3,
     });
 
-    await tester.pumpWidget(const GrapaApp(showAds: false));
+    await pumpGrapa(tester);
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Perfil'));
@@ -109,8 +119,12 @@ void main() {
     expect(find.text('260 / 500 monedas ganadas'), findsOneWidget);
   });
 
-  testWidgets('permite equipar ropa de Grapa desde el perfil', (tester) async {
-    await tester.pumpWidget(const GrapaApp(showAds: false));
+  testWidgets('permite comprar y equipar ropa de Grapa desde el perfil', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({'coins': 100});
+
+    await pumpGrapa(tester);
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Perfil'));
@@ -123,42 +137,184 @@ void main() {
     );
     await tester.drag(find.byType(ListView).first, const Offset(0, -140));
     await tester.pumpAndSettle();
+
+    expect(find.text('Comprar'), findsWidgets);
     await tester.tap(find.text('Lazo'));
     await tester.pumpAndSettle();
 
+    expect(find.text('¡Artículo adquirido!'), findsOneWidget);
+    await tester.tap(find.text('¡Genial!'));
+    await tester.pumpAndSettle();
+
     final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getInt('coins'), 20);
     expect(
       preferences.getString('equipped_grapa_asset'),
       GrapaEquippedAssets.bowPremium,
     );
+    expect(
+      preferences.getStringList('purchased_items'),
+      contains('bow_premium_01'),
+    );
     expect(find.text('Equipado'), findsOneWidget);
   });
+
+  testWidgets('permite interactuar y acariciar a Pin', (tester) async {
+    await pumpGrapa(tester);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Pin'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(AnimatedScale).first);
+    await tester.pump();
+
+    expect(find.byType(SnackBar), findsOneWidget);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('permite crear una misión seleccionando una categoría manual', (
+    tester,
+  ) async {
+    await pumpGrapa(tester);
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.text('Añadir una misión diaria'),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Añadir una misión diaria'));
+    await tester.pumpAndSettle();
+
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'Estudiar 30 minutos');
+    await tester.enterText(fields.at(1), 'Estudio · Por la mañana');
+
+    await tester.tap(find.text('Estudio'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Crear misión'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Estudiar 30 minutos'), findsOneWidget);
+    expect(find.text('Estudio · Por la mañana'), findsOneWidget);
+  });
+
+  testWidgets(
+    'muestra la celebración de día conquistado al completar todas las tareas',
+    (tester) async {
+      await pumpGrapa(tester);
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Preparar presentación'));
+      await tester.tap(find.text('Preparar presentación'));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Caminar 20 minutos'));
+      await tester.tap(find.text('Caminar 20 minutos'));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Leer 10 páginas'));
+      await tester.tap(find.text('Leer 10 páginas'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('¡Día conquistado!'), findsOneWidget);
+      await tester.tap(find.text('¡Continuar la aventura!'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('3/3 listas'), findsOneWidget);
+    },
+  );
 
   testWidgets('muestra el progreso de aventura y vuelve a las misiones', (
     tester,
   ) async {
-    await tester.pumpWidget(const GrapaApp(showAds: false));
+    await pumpGrapa(tester);
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Aventura'));
     await tester.pumpAndSettle();
 
-    expect(find.text('La expedición comienza aquí'), findsOneWidget);
-    expect(find.text('0 de 3 misiones'), findsOneWidget);
+    expect(find.text('MUNDO 1: BOSQUE DEL ENFOQUE'), findsOneWidget);
+    expect(find.text('Día 1 de 7 en Bosque del Enfoque'), findsOneWidget);
+    expect(find.text('0 de 3 misiones completadas hoy.'), findsOneWidget);
 
     await tester.drag(find.byType(ListView).first, const Offset(0, -500));
     await tester.pumpAndSettle();
 
-    expect(find.text('Continuar misiones'), findsOneWidget);
+    expect(find.text('Continuar misiones de hoy'), findsOneWidget);
 
-    await tester.tap(find.text('Continuar misiones'));
+    await tester.tap(find.text('Continuar misiones de hoy'));
     await tester.pumpAndSettle();
 
     expect(find.text('Misiones de hoy'), findsOneWidget);
   });
 
+  testWidgets(
+    'permite abrir el taller de mejoras y comprar un escudo de racha',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({'coins': 200});
+
+      await pumpGrapa(tester);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Perfil'));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('Taller de mejoras'),
+        250,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Taller de mejoras'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Escudo de Racha'), findsOneWidget);
+      await tester.tap(find.text('120 🪙').first);
+      await tester.pumpAndSettle();
+
+      final preferences = await SharedPreferences.getInstance();
+      expect(preferences.getInt('coins'), 80);
+      expect(preferences.getInt('streak_shields'), 1);
+    },
+  );
+
+  testWidgets('permite iniciar y completar un duelo de enfoque', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({'coins': 50});
+
+    await pumpGrapa(tester);
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('⏱️ Duelo de Enfoque'));
+    await tester.tap(find.text('⏱️ Duelo de Enfoque'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Duelo de Enfoque Pomodoro'), findsOneWidget);
+    await tester.tap(find.text('¡Comenzar Duelo!'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Mantén tu mente enfocada. ¡No cedas a la distracción!'),
+      findsOneWidget,
+    );
+
+    // Fast-forward 15 minutes of countdown
+    await tester.pump(const Duration(minutes: 16));
+    await tester.pumpAndSettle();
+
+    expect(find.text('¡Saca Grapas ha sido derrotado!'), findsOneWidget);
+    await tester.tap(find.text('¡Reclamar victoria (+15 🪙)!'));
+    await tester.pumpAndSettle();
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getInt('coins'), 75);
+  });
+
   testWidgets('edita el nombre y el detalle de una misión', (tester) async {
-    await tester.pumpWidget(const GrapaApp(showAds: false));
+    await pumpGrapa(tester);
     await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.more_vert_rounded).first);
@@ -179,7 +335,7 @@ void main() {
   testWidgets('muestra un estado útil al eliminar todas las misiones', (
     tester,
   ) async {
-    await tester.pumpWidget(const GrapaApp(showAds: false));
+    await pumpGrapa(tester);
     await tester.pumpAndSettle();
 
     for (var index = 0; index < 3; index++) {
@@ -212,7 +368,7 @@ void main() {
           '[{"title":"Estirar","subtitle":"Salud · 5 min","categoryAsset":"assets/images/mision_categoria/mision_categoria_02_ejercicio.png","color":4289976240,"done":true}]',
     });
 
-    await tester.pumpWidget(const GrapaApp(showAds: false));
+    await pumpGrapa(tester);
     await tester.pumpAndSettle();
 
     expect(find.text('777'), findsOneWidget);
@@ -239,7 +395,7 @@ void main() {
       'daily_missions': '[$missions]',
     });
 
-    await tester.pumpWidget(const GrapaApp(showAds: false));
+    await pumpGrapa(tester);
     await tester.pumpAndSettle();
 
     for (var index = 1; index <= 5; index++) {

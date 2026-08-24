@@ -363,3 +363,453 @@ class _Pill extends StatelessWidget {
     );
   }
 }
+
+class _WeeklyStreakRow extends StatelessWidget {
+  const _WeeklyStreakRow({
+    required this.completedDatesHistory,
+    required this.todayDone,
+  });
+
+  final Set<String> completedDatesHistory;
+  final bool todayDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    const dayNames = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFCF6),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFEADBCE)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: List.generate(7, (index) {
+          final date = monday.add(Duration(days: index));
+          final dateKey = '${date.year}-${date.month}-${date.day}';
+          final isToday =
+              date.day == now.day &&
+              date.month == now.month &&
+              date.year == now.year;
+          final isDone =
+              completedDatesHistory.contains(dateKey) || (isToday && todayDone);
+          final isFuture = date.isAfter(DateTime(now.year, now.month, now.day));
+
+          return Column(
+            children: [
+              Text(
+                dayNames[index],
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: isToday
+                      ? const Color(0xFF7656D6)
+                      : const Color(0xFF8A8378),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: isDone
+                      ? const Color(0xFFFFF2D6)
+                      : isToday
+                      ? const Color(0xFFEDE7FA)
+                      : const Color(0xFFF3EFE9),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isToday
+                        ? const Color(0xFF7656D6)
+                        : isDone
+                        ? const Color(0xFFF5B041)
+                        : Colors.transparent,
+                    width: isToday ? 2 : 1,
+                  ),
+                ),
+                child: Center(
+                  child: isDone
+                      ? Image.asset(
+                          UiBrandingAssets.streakBadge,
+                          width: 22,
+                          height: 22,
+                          fit: BoxFit.contain,
+                        )
+                      : isToday
+                      ? Text(
+                          '${date.day}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF7656D6),
+                          ),
+                        )
+                      : Text(
+                          '${date.day}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isFuture
+                                ? const Color(0xFFCCC5B9)
+                                : const Color(0xFF8A8378),
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class _FocusDuelBanner extends StatelessWidget {
+  const _FocusDuelBanner({required this.onStartDuel});
+
+  final VoidCallback onStartDuel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFF2E243D),
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        onTap: onStartDuel,
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: const Color(0xFF473A5E)),
+          ),
+          child: Row(
+            children: [
+              Image.asset(
+                GrapaAssets.determined,
+                width: 54,
+                height: 54,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '⏱️ Duelo de Enfoque',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    SizedBox(height: 3),
+                    Text(
+                      'Sesión de concentración para derrotar a Saca Grapas.',
+                      style: TextStyle(
+                        color: Color(0xFFD3CBE8),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.play_circle_fill_rounded,
+                color: Color(0xFFF5B041),
+                size: 34,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FocusDuelSheet extends StatefulWidget {
+  const _FocusDuelSheet({required this.missions, required this.onCompleteDuel});
+
+  final List<Mission> missions;
+  final void Function(int minutes, Mission? mission) onCompleteDuel;
+
+  @override
+  State<_FocusDuelSheet> createState() => _FocusDuelSheetState();
+}
+
+class _FocusDuelSheetState extends State<_FocusDuelSheet> {
+  int _selectedMinutes = 15;
+  Mission? _selectedMission;
+  bool _isRunning = false;
+  bool _isVictory = false;
+  late int _remainingSeconds;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    final pending = widget.missions.where((m) => !m.done).toList();
+    if (pending.isNotEmpty) _selectedMission = pending.first;
+    _remainingSeconds = _selectedMinutes * 60;
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startDuel() {
+    setState(() {
+      _isRunning = true;
+      _isVictory = false;
+      _remainingSeconds = _selectedMinutes * 60;
+    });
+    HapticFeedback.mediumImpact();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingSeconds > 0) {
+        if (mounted) setState(() => _remainingSeconds -= 1);
+      } else {
+        _timer?.cancel();
+        if (mounted) {
+          setState(() {
+            _isRunning = false;
+            _isVictory = true;
+          });
+          HapticFeedback.heavyImpact();
+        }
+      }
+    });
+  }
+
+  void _cancelDuel() {
+    _timer?.cancel();
+    HapticFeedback.lightImpact();
+    Navigator.pop(context);
+  }
+
+  String _formatTime(int totalSeconds) {
+    final m = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+    final s = (totalSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pendingMissions = widget.missions.where((m) => !m.done).toList();
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      decoration: const BoxDecoration(
+        color: Color(0xFFFFFCF6),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4.5,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD4CDC1),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (_isVictory) ...[
+                Image.asset(
+                  SacaGrapaAssets.defeated,
+                  height: 110,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  '¡Saca Grapas ha sido derrotado!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Completaste $_selectedMinutes min de concentración profunda.\n¡Has ganado +15 monedas de bonificación!',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xFF80776D),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {
+                      widget.onCompleteDuel(_selectedMinutes, _selectedMission);
+                      Navigator.pop(context);
+                    },
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: const Color(0xFF7656D6),
+                    ),
+                    child: const Text(
+                      '¡Reclamar victoria (+15 🪙)!',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ),
+              ] else if (_isRunning) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      GrapaAssets.determined,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(width: 16),
+                    Image.asset(
+                      SacaGrapaAssets.temptingProcrastination,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.contain,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  _formatTime(_remainingSeconds),
+                  style: const TextStyle(
+                    fontSize: 44,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
+                    color: Color(0xFF493D36),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Mantén tu mente enfocada. ¡No cedas a la distracción!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF80776D),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                OutlinedButton(
+                  onPressed: _cancelDuel,
+                  child: const Text('Rendirse por ahora'),
+                ),
+              ] else ...[
+                Image.asset(
+                  SacaGrapaAssets.temptingProcrastination,
+                  height: 90,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Duelo de Enfoque Pomodoro',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Elige la duración y la misión que vas a realizar para vencer la procrastinación.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF80776D),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Tiempo de concentración:',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [15, 25, 45].map((mins) {
+                    final isSelected = _selectedMinutes == mins;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                      child: ChoiceChip(
+                        label: Text('$mins min'),
+                        selected: isSelected,
+                        onSelected: (_) => setState(() {
+                          _selectedMinutes = mins;
+                          _remainingSeconds = mins * 60;
+                        }),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                if (pendingMissions.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Asociar a misión pendiente:',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<Mission?>(
+                    initialValue: _selectedMission,
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    items: [
+                      const DropdownMenuItem(
+                        value: null,
+                        child: Text('Enfoque libre'),
+                      ),
+                      ...pendingMissions.map(
+                        (m) => DropdownMenuItem(value: m, child: Text(m.title)),
+                      ),
+                    ],
+                    onChanged: (val) => setState(() => _selectedMission = val),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _startDuel,
+                    icon: const Icon(Icons.bolt_rounded),
+                    label: const Text('¡Comenzar Duelo!'),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

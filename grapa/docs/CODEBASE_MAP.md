@@ -52,6 +52,11 @@ Definido en `lib/src/home.dart`:
 | `last_completed_date` | string | Último día completado. |
 | `daily_rewards_earned` | int | Monedas obtenidas por misiones durante el día. |
 | `equipped_grapa_asset` | string | Asset actual de Grapa equipada. |
+| `purchased_items` | List<string> | Identificadores de objetos comprados en la tienda. |
+| `adventure_days_completed` | int | Días totales de expedición completados para la progresión por mundos. |
+| `purchased_upgrades` | List<string> | Habilidades permanentes activas del taller (imán, gourmet). |
+| `streak_shields` | int | Cantidad de escudos acumulados para proteger la racha. |
+| `completed_dates_history` | List<string> | Registro de fechas completadas para el historial y calendario semanal. |
 
 ## Dependencias entre módulos
 

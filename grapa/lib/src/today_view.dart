@@ -8,10 +8,12 @@ class _TodayView extends StatelessWidget {
     required this.streak,
     required this.dailyRewardsEarned,
     required this.maxDailyReward,
+    required this.completedDatesHistory,
     required this.onToggle,
     required this.onEdit,
     required this.onDelete,
     required this.onAdd,
+    required this.onStartFocusDuel,
   });
 
   final List<Mission> missions;
@@ -20,10 +22,12 @@ class _TodayView extends StatelessWidget {
   final int streak;
   final int dailyRewardsEarned;
   final int maxDailyReward;
+  final Set<String> completedDatesHistory;
   final ValueChanged<int> onToggle;
   final ValueChanged<int> onEdit;
   final ValueChanged<int> onDelete;
   final VoidCallback onAdd;
+  final VoidCallback onStartFocusDuel;
 
   String get _todayLabel {
     const weekdays = [
@@ -57,6 +61,8 @@ class _TodayView extends StatelessWidget {
   Widget build(BuildContext context) {
     final progress = missions.isEmpty ? 0.0 : completed / missions.length;
     final dailyRewardRemaining = maxDailyReward - dailyRewardsEarned;
+    final todayDone = missions.isNotEmpty && completed == missions.length;
+
     return CustomScrollView(
       slivers: [
         SliverPadding(
@@ -127,7 +133,14 @@ class _TodayView extends StatelessWidget {
                 completed: completed,
                 total: missions.length,
               ),
-              const SizedBox(height: 26),
+              const SizedBox(height: 14),
+              _WeeklyStreakRow(
+                completedDatesHistory: completedDatesHistory,
+                todayDone: todayDone,
+              ),
+              const SizedBox(height: 12),
+              _FocusDuelBanner(onStartDuel: onStartFocusDuel),
+              const SizedBox(height: 24),
               Row(
                 children: [
                   const Expanded(

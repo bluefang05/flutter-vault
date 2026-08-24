@@ -6,14 +6,26 @@ class _ProfileView extends StatelessWidget {
     required this.coins,
     required this.totalCoinsEarned,
     required this.equippedGrapaAsset,
+    required this.purchasedItems,
+    required this.purchasedUpgrades,
+    required this.streakShields,
+    required this.completedDatesHistory,
     required this.onEquipGrapaAsset,
+    required this.onBuyItem,
+    required this.onOpenWorkshop,
   });
 
   final int streak;
   final int coins;
   final int totalCoinsEarned;
   final String equippedGrapaAsset;
+  final Set<String> purchasedItems;
+  final Set<String> purchasedUpgrades;
+  final int streakShields;
+  final Set<String> completedDatesHistory;
   final ValueChanged<String> onEquipGrapaAsset;
+  final ValueChanged<_ShopPreviewItem> onBuyItem;
+  final VoidCallback onOpenWorkshop;
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +57,7 @@ class _ProfileView extends StatelessWidget {
               child: _CompactProgressTile(
                 icon: Icons.local_fire_department_rounded,
                 value: '$streak',
-                label: streak == 1 ? 'dia activo' : 'dias activos',
+                label: streak == 1 ? 'día activo' : 'días activos',
                 color: const Color(0xFFF0A445),
               ),
             ),
@@ -69,10 +81,16 @@ class _ProfileView extends StatelessWidget {
         const SizedBox(height: 10),
         _ShopPreviewSection(
           equippedGrapaAsset: equippedGrapaAsset,
+          purchasedItems: purchasedItems,
           onEquipGrapaAsset: onEquipGrapaAsset,
+          onBuyItem: onBuyItem,
         ),
         const SizedBox(height: 10),
-        const _UpgradeWorkshopCard(),
+        _UpgradeWorkshopCard(
+          onOpenWorkshop: onOpenWorkshop,
+          streakShields: streakShields,
+          purchasedUpgrades: purchasedUpgrades,
+        ),
       ],
     );
   }
