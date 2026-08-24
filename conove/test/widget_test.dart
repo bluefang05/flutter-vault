@@ -1,18 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:conove/main.dart';
-import 'package:conove/core/services/storage_service.dart';
-import 'package:conove/data/gesture_database.dart';
-import 'package:conove/data/quiz_database.dart';
-import 'package:conove/data/scenario_database.dart';
-import 'package:conove/models/category.dart';
-import 'package:conove/state/settings_provider.dart';
+import 'package:gestura/main.dart';
+import 'package:gestura/core/services/storage_service.dart';
+import 'package:gestura/data/gesture_database.dart';
+import 'package:gestura/data/quiz_database.dart';
+import 'package:gestura/data/scenario_database.dart';
+import 'package:gestura/models/category.dart';
+import 'package:gestura/state/settings_provider.dart';
+import 'package:gestura/core/localization/app_localizations.dart';
 
 void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     await StorageService.init();
+  });
+
+  test('AppLocalizations provides complete dictionary in all 5 languages', () {
+    for (final locale in AppLocalizations.supportedLocales) {
+      final loc = AppLocalizations(locale);
+      expect(loc.appName, equals('Gestura'));
+      expect(loc.home.isNotEmpty, isTrue);
+      expect(loc.manual.isNotEmpty, isTrue);
+      expect(loc.practice.isNotEmpty, isTrue);
+      expect(loc.scenarios.isNotEmpty, isTrue);
+      expect(loc.settings.isNotEmpty, isTrue);
+      expect(loc.quickDecoder.isNotEmpty, isTrue);
+      expect(loc.dailyQuiz.isNotEmpty, isTrue);
+      expect(loc.socialTree.isNotEmpty, isTrue);
+      expect(loc.compareAB.isNotEmpty, isTrue);
+      expect(loc.cheatSheet.isNotEmpty, isTrue);
+      expect(loc.language.isNotEmpty, isTrue);
+    }
   });
 
   test('GestureDatabase contains complete dataset across all 6 categories', () {
@@ -57,27 +76,30 @@ void main() {
     expect(reloaded.totalPoints, greaterThan(0));
   });
 
-  testWidgets('ConoVeApp launches and renders main navigation bar and new tools', (WidgetTester tester) async {
-    await tester.pumpWidget(const ConoVeApp());
+  testWidgets('GesturaApp launches and renders main navigation bar and new tools', (WidgetTester tester) async {
+    final settings = SettingsProvider();
+    await settings.setLanguageCode('es');
+    await tester.pumpWidget(const GesturaApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('ConoVe'), findsOneWidget);
+    expect(find.text('Gestura'), findsWidgets);
     expect(find.text('Inicio'), findsOneWidget);
     expect(find.text('Manual'), findsOneWidget);
     expect(find.text('Práctica'), findsOneWidget);
     expect(find.text('Escenarios'), findsOneWidget);
-    expect(find.text('Comparador Visual A/B'), findsOneWidget);
+    expect(find.text('Gesto del Día'), findsOneWidget);
 
-    // Scroll down to check Árbol de Decisión and Guía de Bolsillo
-    await tester.drag(find.byType(ListView).first, const Offset(0, -300));
+    // Scroll down to check tools
+    await tester.drag(find.byType(ListView).first, const Offset(0, -400));
     await tester.pumpAndSettle();
 
-    expect(find.text('Árbol de Decisión Social'), findsOneWidget);
-    expect(find.text('Guía de Bolsillo (Cheat Sheet)'), findsOneWidget);
+    expect(find.textContaining('Comparador Visual'), findsWidgets);
+    expect(find.textContaining('Árbol de Decisión'), findsWidgets);
+    expect(find.textContaining('Guía de Bolsillo'), findsWidgets);
   });
 
   testWidgets('SettingsProvider toggles theme, high contrast and motion dynamically', (WidgetTester tester) async {
-    await tester.pumpWidget(const ConoVeApp());
+    await tester.pumpWidget(const GesturaApp());
     await tester.pumpAndSettle();
 
     final settings = SettingsProvider();
@@ -97,6 +119,52 @@ void main() {
     await settings.setReduceMotion(true);
     await tester.pumpAndSettle();
     expect(settings.isReduceMotion, isTrue);
+
+    // Switch language to English
+    await settings.setLanguageCode('en');
+    await tester.pumpAndSettle();
+    expect(settings.languageCode, equals('en'));
+    expect(find.text('Home'), findsWidgets);
+    expect(find.text('Manual'), findsWidgets);
+    expect(find.text('Practice'), findsWidgets);
+
+    // Switch language to French
+    await settings.setLanguageCode('fr');
+    await tester.pumpAndSettle();
+    expect(settings.languageCode, equals('fr'));
+    expect(find.text('Accueil'), findsWidgets);
+
+    // Switch language to Portuguese
+    await settings.setLanguageCode('pt');
+    await tester.pumpAndSettle();
+    expect(settings.languageCode, equals('pt'));
+    expect(find.text('Início'), findsWidgets);
+
+    // Switch language to German
+    await settings.setLanguageCode('de');
+    await tester.pumpAndSettle();
+    expect(settings.languageCode, equals('de'));
+    expect(find.text('Start'), findsWidgets);
+  });
+
+  testWidgets('Adaptive layout renders NavigationRail on wide screens and NavigationBar on mobile', (WidgetTester tester) async {
+    // 1. Tablet / Wide screen test (800x600 dp)
+    tester.view.physicalSize = const Size(800, 600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    await tester.pumpWidget(const GesturaApp());
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NavigationRail), findsOneWidget);
+    expect(find.byType(NavigationBar), findsNothing);
+
+    // 2. Mobile screen test (390x844 dp)
+    tester.view.physicalSize = const Size(390, 844);
+    await tester.pumpWidget(const GesturaApp());
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(NavigationRail), findsNothing);
   });
 }
-

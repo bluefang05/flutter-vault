@@ -7,6 +7,7 @@ import '../widgets/common/app_card.dart';
 import '../core/constants/app_colors.dart';
 import '../core/services/feedback_service.dart';
 import '../core/services/storage_service.dart';
+import '../core/services/tts_service.dart';
 
 class QuizRunnerScreen extends StatefulWidget {
   final String title;
@@ -31,6 +32,32 @@ class _QuizRunnerScreenState extends State<QuizRunnerScreen> {
 
   QuizQuestion get _currentQuestion => widget.questions[_currentIndex];
 
+  @override
+  void initState() {
+    super.initState();
+    if (StorageService.getAutoNarration()) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _speakCurrentQuestion();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    TtsService.stop();
+    super.dispose();
+  }
+
+  void _speakCurrentQuestion() {
+    final q = _currentQuestion;
+    TtsService.speakQuizQuestion(
+      question: q.prompt,
+      visualClue: q.keyVisualClue,
+      options: q.options.map((opt) => opt.text).toList(),
+      tag: 'quiz_${q.id}',
+    );
+  }
+
   void _onSelectOption(String optionId) {
     if (_isEvaluated) return;
     setState(() {
@@ -54,6 +81,14 @@ class _QuizRunnerScreenState extends State<QuizRunnerScreen> {
       }
     });
 
+    if (StorageService.getAutoNarration()) {
+      TtsService.speakQuizFeedback(
+        isCorrect: isCorrect,
+        keyVisualClue: _currentQuestion.keyVisualClue,
+        explanation: _currentQuestion.explanation,
+      );
+    }
+
     showModalBottomSheet(
       context: context,
       isDismissible: false,
@@ -64,6 +99,7 @@ class _QuizRunnerScreenState extends State<QuizRunnerScreen> {
         keyVisualClue: _currentQuestion.keyVisualClue,
         explanation: _currentQuestion.explanation,
         onContinue: () {
+          TtsService.stop();
           Navigator.pop(context);
           _onNextStep();
         },
@@ -78,8 +114,14 @@ class _QuizRunnerScreenState extends State<QuizRunnerScreen> {
         _selectedOptionId = null;
         _isEvaluated = false;
       });
+      if (StorageService.getAutoNarration()) {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) _speakCurrentQuestion();
+        });
+      }
     } else {
       // Finished quiz
+      FeedbackService.complete();
       final scorePercentage = ((_correctCount / widget.questions.length) * 100).round();
       final progress = StorageService.loadProgress();
       final updated = progress.recordQuizResult(widget.title, scorePercentage);
@@ -88,6 +130,10 @@ class _QuizRunnerScreenState extends State<QuizRunnerScreen> {
       setState(() {
         _isFinished = true;
       });
+
+      if (StorageService.getAutoNarration()) {
+        TtsService.speak('¡Entrenamiento completado! Tu puntuación final es de $scorePercentage por ciento.');
+      }
     }
   }
 
@@ -106,6 +152,16 @@ class _QuizRunnerScreenState extends State<QuizRunnerScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.volume_up_rounded),
+            tooltip: 'Escuchar pregunta y opciones',
+            onPressed: () {
+              FeedbackService.lightClick();
+              _speakCurrentQuestion();
+            },
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(6),
           child: LinearProgressIndicator(
@@ -116,6 +172,7 @@ class _QuizRunnerScreenState extends State<QuizRunnerScreen> {
           ),
         ),
       ),
+
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),

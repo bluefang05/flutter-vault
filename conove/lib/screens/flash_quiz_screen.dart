@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
 import '../core/services/feedback_service.dart';
 import '../core/services/storage_service.dart';
+import '../core/services/tts_service.dart';
 import '../data/quiz_database.dart';
 import '../models/quiz_question.dart';
 import '../widgets/common/app_card.dart';
@@ -57,14 +58,26 @@ class _FlashQuizScreenState extends State<FlashQuizScreen> with SingleTickerProv
 
     _timerController.reset();
     _timerController.forward();
+    FeedbackService.tick();
 
     _countdownTimer?.cancel();
-    _countdownTimer = Timer(const Duration(seconds: flashSeconds), () {
-      if (mounted) {
-        setState(() {
-          _isImageVisible = false;
-        });
-        FeedbackService.lightClick();
+    int ticksLeft = flashSeconds - 1;
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted || _isAnswered) {
+        timer.cancel();
+        return;
+      }
+      if (ticksLeft > 0) {
+        FeedbackService.tick();
+        ticksLeft--;
+      } else {
+        timer.cancel();
+        if (mounted) {
+          setState(() {
+            _isImageVisible = false;
+          });
+          FeedbackService.lightClick();
+        }
       }
     });
   }
@@ -87,6 +100,15 @@ class _FlashQuizScreenState extends State<FlashQuizScreen> with SingleTickerProv
     });
 
     final currentQ = _questions[_currentIndex];
+
+    if (StorageService.getAutoNarration()) {
+      TtsService.speakQuizFeedback(
+        isCorrect: option.isCorrect,
+        keyVisualClue: currentQ.keyVisualClue,
+        explanation: currentQ.explanation,
+      );
+    }
+
     showModalBottomSheet(
       context: context,
       isDismissible: false,
@@ -99,6 +121,7 @@ class _FlashQuizScreenState extends State<FlashQuizScreen> with SingleTickerProv
         keyVisualClue: currentQ.keyVisualClue,
         explanation: currentQ.explanation,
         onContinue: () {
+          TtsService.stop();
           Navigator.pop(ctx);
           _nextQuestion();
         },
@@ -118,6 +141,7 @@ class _FlashQuizScreenState extends State<FlashQuizScreen> with SingleTickerProv
   }
 
   void _saveProgressAndFinish() async {
+    FeedbackService.complete();
     final progress = StorageService.loadProgress();
     final updated = progress.recordQuizResult('Flash Contrarreloj', _score);
     await StorageService.saveProgress(updated);
@@ -129,7 +153,7 @@ class _FlashQuizScreenState extends State<FlashQuizScreen> with SingleTickerProv
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Text('¡Entrenamiento Flash Completado!'),
+        title: const Text('¡Sesión Completada!'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -157,6 +181,7 @@ class _FlashQuizScreenState extends State<FlashQuizScreen> with SingleTickerProv
   void dispose() {
     _countdownTimer?.cancel();
     _timerController.dispose();
+    TtsService.stop();
     super.dispose();
   }
 
@@ -171,6 +196,21 @@ class _FlashQuizScreenState extends State<FlashQuizScreen> with SingleTickerProv
     return Scaffold(
       appBar: AppBar(
         title: const Text('Modo Flash Contrarreloj'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.volume_up_rounded),
+            tooltip: 'Escuchar pregunta y opciones',
+            onPressed: () {
+              FeedbackService.lightClick();
+              TtsService.speakQuizQuestion(
+                question: currentQ.prompt,
+                visualClue: currentQ.keyVisualClue,
+                options: currentQ.options.map((o) => o.text).toList(),
+                tag: 'flash_q_${currentQ.id}',
+              );
+            },
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
           child: AnimatedBuilder(

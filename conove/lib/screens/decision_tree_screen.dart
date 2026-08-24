@@ -8,6 +8,7 @@ import '../widgets/common/badge_pill.dart';
 import '../widgets/common/section_header.dart';
 import '../widgets/illustrations/illustration_widget.dart';
 import '../core/services/tts_service.dart';
+import '../core/services/storage_service.dart';
 import 'gesture_detail_screen.dart';
 
 class DecisionTreeScreen extends StatefulWidget {
@@ -80,102 +81,179 @@ class _DecisionTreeScreenState extends State<DecisionTreeScreen> {
       appBar: AppBar(
         title: const Text('Árbol de Decisión Social'),
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        children: [
-          // Header Banner
-          AppCard(
-            color: isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5),
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                const Icon(Icons.account_tree_rounded, color: AppColors.success, size: 36),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Regla: Si veo X ➔ Significa Y ➔ Hago Z',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white : AppColors.textPrimaryLight,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isTablet = constraints.maxWidth >= 640;
+          final isWide = constraints.maxWidth >= 960;
+
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1050),
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                children: [
+                  // Header Banner
+                  AppCard(
+                    color: isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5),
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.account_tree_rounded, color: AppColors.success, size: 36),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Regla: Si veo X ➔ Significa Y ➔ Hago Z',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Descifra qué hacer en 3 toques sin memorizar teoría.',
+                                style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : AppColors.textSecondaryLight),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Descifra qué hacer en 3 toques sin memorizar teoría.',
-                        style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : AppColors.textSecondaryLight),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-          // Paso 1: Seleccionar Zona
-          const SectionHeader(
-            title: 'Paso 1: ¿Dónde viste la señal?',
-            subtitle: 'Toca la zona corporal que observaste',
-          ),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: zones.map((z) {
-              final isSelected = _selectedZone == z['id'];
-              return ChoiceChip(
-                avatar: Icon(z['icon'] as IconData, size: 16, color: isSelected ? Colors.white : z['color'] as Color),
-                label: Text(z['label'] as String),
-                selected: isSelected,
-                selectedColor: (z['color'] as Color).withValues(alpha: 0.85),
-                labelStyle: TextStyle(
-                  color: isSelected ? Colors.white : (isDark ? Colors.white : Colors.black87),
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-                onSelected: (val) {
-                  FeedbackService.lightClick();
-                  setState(() {
-                    _selectedZone = val ? (z['id'] as String) : null;
-                    _selectedGesture = null;
-                  });
-                },
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 24),
+                  // Paso 1: Seleccionar Zona
+                  const SectionHeader(
+                    title: 'Paso 1: ¿Dónde viste la señal?',
+                    subtitle: 'Toca la zona corporal que observaste',
+                  ),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: zones.map((z) {
+                      final isSelected = _selectedZone == z['id'];
+                      return ChoiceChip(
+                        avatar: Icon(z['icon'] as IconData, size: 16, color: isSelected ? Colors.white : z['color'] as Color),
+                        label: Text(z['label'] as String),
+                        selected: isSelected,
+                        selectedColor: (z['color'] as Color).withValues(alpha: 0.85),
+                        labelStyle: TextStyle(
+                          color: isSelected ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                        onSelected: (val) {
+                          FeedbackService.lightClick();
+                          setState(() {
+                            _selectedZone = val ? (z['id'] as String) : null;
+                            _selectedGesture = null;
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
 
-          // Paso 2: Seleccionar Gesto Específico
-          if (_selectedZone != null) ...[
-            const SectionHeader(
-              title: 'Paso 2: ¿Qué patrón específico viste?',
-              subtitle: 'Selecciona la señal que mejor describe lo ocurrido',
-            ),
-            _buildGestureOptionsList(isDark),
-            const SizedBox(height: 24),
-          ],
+                  // Paso 2: Seleccionar Gesto Específico
+                  if (_selectedZone != null) ...[
+                    const SectionHeader(
+                      title: 'Paso 2: ¿Qué patrón específico viste?',
+                      subtitle: 'Selecciona la señal que mejor describe lo ocurrido',
+                    ),
+                    _buildGestureOptionsList(isDark, isTablet, isWide),
+                    const SizedBox(height: 24),
+                  ],
 
-          // Paso 3: Diagnóstico y Acción Directa
-          if (_selectedGesture != null) ...[
-            const SectionHeader(
-              title: 'Paso 3: Diagnóstico y Acción Inmediata',
-              subtitle: 'Qué significa y cómo reaccionar paso a paso',
+                  // Paso 3: Diagnóstico y Acción Directa
+                  if (_selectedGesture != null) ...[
+                    const SectionHeader(
+                      title: 'Paso 3: Diagnóstico y Acción Inmediata',
+                      subtitle: 'Qué significa y cómo reaccionar paso a paso',
+                    ),
+                    _buildDiagnosisCard(_selectedGesture!, isDark),
+                    const SizedBox(height: 20),
+                  ],
+                ],
+              ),
             ),
-            _buildDiagnosisCard(_selectedGesture!, isDark),
-            const SizedBox(height: 20),
-          ],
-        ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildGestureOptionsList(bool isDark) {
+  Widget _buildGestureOptionsList(bool isDark, bool isTablet, bool isWide) {
     final zoneData = zones.firstWhere((z) => z['id'] == _selectedZone);
     final clueIds = zoneData['clues'] as List<String>;
     final items = GestureDatabase.items.where((g) => clueIds.contains(g.id) || clueIds.contains(g.illustrationKey)).toList();
+
+    if (isTablet) {
+      final columns = isWide ? 3 : 2;
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: columns,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: isWide ? 3.0 : 2.5,
+        ),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final gesture = items[index];
+          final isSelected = _selectedGesture?.id == gesture.id;
+          return AppCard(
+            color: isSelected ? AppColors.primary.withValues(alpha: 0.12) : null,
+            borderSide: isSelected ? const BorderSide(color: AppColors.primary, width: 2) : null,
+            onTap: () {
+              FeedbackService.lightClick();
+              setState(() => _selectedGesture = gesture);
+            },
+            padding: const EdgeInsets.all(10),
+            child: Row(
+              children: [
+                ConoVeIllustration(
+                  illustrationKey: gesture.illustrationKey,
+                  width: 44,
+                  height: 44,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        gesture.name,
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        gesture.summary,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  gesture.signalType.icon,
+                  color: gesture.signalType.color,
+                  size: 18,
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
 
     return Column(
       children: items.map((gesture) {
@@ -188,6 +266,10 @@ class _DecisionTreeScreenState extends State<DecisionTreeScreen> {
             onTap: () {
               FeedbackService.lightClick();
               setState(() => _selectedGesture = gesture);
+              if (StorageService.getAutoNarration()) {
+                final textToSpeak = '${gesture.name}. Semáforo ${gesture.signalType.label}. Significado: ${gesture.probableMeaning}. Qué debes hacer: ${gesture.whatToDo}. En ventas: ${gesture.salesTip}';
+                TtsService.speak(textToSpeak, gestureId: gesture.id);
+              }
             },
             padding: const EdgeInsets.all(10),
             child: Row(

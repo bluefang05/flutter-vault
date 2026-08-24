@@ -37,110 +37,210 @@ class _ScenariosScreenState extends State<ScenariosScreen> {
       appBar: AppBar(
         title: const Text('Simulador de Escenarios'),
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        children: [
-          // Banner intro
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.theater_comedy_rounded, color: AppColors.primary, size: 28),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Entrena en situaciones reales de ventas, entrevistas y vida social. Toma decisiones y observa las consecuencias.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                      height: 1.35,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isTablet = constraints.maxWidth >= 640;
+          final columns = isTablet ? 2 : 1;
+
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1050),
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                children: [
+                  // Banner intro
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.theater_comedy_rounded, color: AppColors.primary, size: 28),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Entrena en situaciones reales de ventas, entrevistas y vida social. Toma decisiones y observa las consecuencias.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-          // List of Scenarios
-          for (final scenario in ScenarioDatabase.scenarios) ...[
-            Padding(
-              padding: const EdgeInsets.only(bottom: 14.0),
-              child: AppCard(
-                padding: const EdgeInsets.all(16),
-                onTap: () {
-                  FeedbackService.lightClick();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ScenarioRunnerScreen(scenario: scenario),
-                    ),
-                  ).then((_) => _loadProgress());
-                },
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        BadgePill(
-                          text: scenario.domain,
-                          color: AppColors.indigo,
-                        ),
-                        const Spacer(),
-                        if (_completedIds.contains(scenario.id))
-                          const BadgePill(
-                            text: 'Completado',
-                            icon: Icons.check_circle_rounded,
-                            color: AppColors.success,
+                  if (isTablet)
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: columns,
+                        mainAxisSpacing: 14,
+                        crossAxisSpacing: 14,
+                        childAspectRatio: 1.65,
+                      ),
+                      itemCount: ScenarioDatabase.scenarios.length,
+                      itemBuilder: (context, index) {
+                        final scenario = ScenarioDatabase.scenarios[index];
+                        return AppCard(
+                          padding: const EdgeInsets.all(16),
+                          onTap: () {
+                            FeedbackService.lightClick();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ScenarioRunnerScreen(scenario: scenario),
+                              ),
+                            ).then((_) => _loadProgress());
+                          },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  BadgePill(
+                                    text: scenario.domain,
+                                    color: AppColors.indigo,
+                                  ),
+                                  const Spacer(),
+                                  if (_completedIds.contains(scenario.id))
+                                    const BadgePill(
+                                      text: 'Completado',
+                                      icon: Icons.check_circle_rounded,
+                                      color: AppColors.success,
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                scenario.title,
+                                style: const TextStyle(
+                                  fontSize: 15.5,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.2,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Expanded(
+                                child: Text(
+                                  scenario.description,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                    height: 1.3,
+                                  ),
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(Icons.format_list_numbered_rounded, size: 16, color: AppColors.textMutedLight),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${scenario.steps.length} momentos de decisión',
+                                    style: TextStyle(fontSize: 12, color: AppColors.textMutedLight),
+                                  ),
+                                  const Spacer(),
+                                  const Text(
+                                    'Comenzar',
+                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Icon(Icons.arrow_forward_rounded, size: 14, color: AppColors.primary),
+                                ],
+                              ),
+                            ],
                           ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      scenario.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      scenario.description,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                        height: 1.3,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Icon(Icons.format_list_numbered_rounded, size: 16, color: AppColors.textMutedLight),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${scenario.steps.length} momentos de decisión',
-                          style: TextStyle(fontSize: 12, color: AppColors.textMutedLight),
+                        );
+                      },
+                    )
+                  else
+                    // Mobile Stack
+                    for (final scenario in ScenarioDatabase.scenarios) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 14.0),
+                        child: AppCard(
+                          padding: const EdgeInsets.all(16),
+                          onTap: () {
+                            FeedbackService.lightClick();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ScenarioRunnerScreen(scenario: scenario),
+                              ),
+                            ).then((_) => _loadProgress());
+                          },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  BadgePill(
+                                    text: scenario.domain,
+                                    color: AppColors.indigo,
+                                  ),
+                                  const Spacer(),
+                                  if (_completedIds.contains(scenario.id))
+                                    const BadgePill(
+                                      text: 'Completado',
+                                      icon: Icons.check_circle_rounded,
+                                      color: AppColors.success,
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                scenario.title,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.2,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                scenario.description,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                  height: 1.3,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Icon(Icons.format_list_numbered_rounded, size: 16, color: AppColors.textMutedLight),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${scenario.steps.length} momentos de decisión',
+                                    style: TextStyle(fontSize: 12, color: AppColors.textMutedLight),
+                                  ),
+                                  const Spacer(),
+                                  const Text(
+                                    'Comenzar',
+                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Icon(Icons.arrow_forward_rounded, size: 14, color: AppColors.primary),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                        const Spacer(),
-                        const Text(
-                          'Comenzar',
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.arrow_forward_rounded, size: 14, color: AppColors.primary),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                ],
               ),
             ),
-          ],
-        ],
+          );
+        },
       ),
     );
   }

@@ -24,21 +24,90 @@ class ConoVeIllustration extends StatelessWidget {
     this.borderRadius,
   });
 
+  String? _resolveAssetPath(String key) {
+    final clean = key.toLowerCase().trim();
+    const expressions = {
+      'duchenne_smile': 'assets/images/expressions/duchenne_smile.png',
+      'sonrisa_genuina': 'assets/images/expressions/sonrisa_genuina.png',
+      'polite_smile': 'assets/images/expressions/polite_smile.png',
+      'sonrisa_falsa': 'assets/images/expressions/sonrisa_falsa.png',
+      'surprised_look': 'assets/images/expressions/surprised_look.png',
+      'sorpresa': 'assets/images/expressions/sorpresa.png',
+      'jaw_clenching': 'assets/images/expressions/jaw_clenching.png',
+      'mandibula_apretada': 'assets/images/expressions/mandibula_apretada.png',
+      'frowning_brow': 'assets/images/expressions/frowning_brow.png',
+      'ceno_fruncido': 'assets/images/expressions/frowning_brow.png',
+    };
+    const postures = {
+      'closed_posture': 'assets/images/postures/closed_posture.png',
+      'brazos_cruzados': 'assets/images/postures/brazos_cruzados.png',
+      'shrug': 'assets/images/postures/shrug.png',
+      'encogerse_hombros': 'assets/images/postures/encogerse_hombros.png',
+      'steepling_hands': 'assets/images/postures/steepling_hands.png',
+      'manos_ojiva': 'assets/images/postures/manos_ojiva.png',
+      'hand_on_chin': 'assets/images/postures/hand_on_chin.png',
+      'pensador': 'assets/images/postures/hand_on_chin.png',
+    };
+
+    if (expressions.containsKey(clean)) return expressions[clean];
+    if (postures.containsKey(clean)) return postures[clean];
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isHighContrast = Theme.of(context).scaffoldBackgroundColor == Colors.black;
 
-    Widget child;
+    final assetPath = _resolveAssetPath(illustrationKey);
+    if (assetPath != null && !isHighContrast) {
+      return Semantics(
+        label: 'Ilustración visual de comunicación no verbal: ${illustrationKey.replaceAll('_', ' ')}',
+        image: true,
+        child: ClipRRect(
+          borderRadius: borderRadius ?? BorderRadius.circular(16),
+          child: Container(
+            width: width,
+            height: height,
+            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+            padding: const EdgeInsets.all(4),
+            child: Image.asset(
+              assetPath,
+              width: width,
+              height: height,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => _buildFallbackPainter(isDark, isHighContrast),
+            ),
+          ),
+        ),
+      );
+    }
 
-    if (illustrationKey == 'logo' || illustrationKey == 'conove_logo') {
-      child = CustomPaint(
-        painter: ConoVeLogoPainter(isDark: isDark, isHighContrast: isHighContrast),
+    final child = _buildFallbackPainter(isDark, isHighContrast);
+
+    return Semantics(
+      label: 'Ilustración visual de comunicación no verbal: ${illustrationKey.replaceAll('_', ' ')}',
+      image: true,
+      child: ClipRRect(
+        borderRadius: borderRadius ?? BorderRadius.circular(16),
+        child: SizedBox(
+          width: width,
+          height: height,
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFallbackPainter(bool isDark, bool isHighContrast) {
+    if (illustrationKey == 'logo' || illustrationKey == 'conove_logo' || illustrationKey == 'gestura_logo') {
+      return CustomPaint(
+        painter: GesturaLogoPainter(isDark: isDark, isHighContrast: isHighContrast),
         size: Size(width, height),
       );
     } else if (illustrationKey.startsWith('proxemics_') || illustrationKey.contains('proxemica') || illustrationKey == 'espacio') {
       final zone = illustrationKey.replaceAll('proxemics_', '').replaceAll('proxemica_', '');
-      child = CustomPaint(
+      return CustomPaint(
         painter: ProxemicsPainter(
           activeZone: zone.isEmpty ? 'all' : zone,
           isDark: isDark,
@@ -56,7 +125,7 @@ class ConoVeIllustration extends StatelessWidget {
         illustrationKey.contains('pausa') ||
         illustrationKey.contains('sarcastico')) {
       final cleanKey = illustrationKey.replaceAll('voice_', '').replaceAll('paralinguistics_', '');
-      child = CustomPaint(
+      return CustomPaint(
         painter: ParalinguisticsPainter(
           soundKey: cleanKey,
           isDark: isDark,
@@ -75,7 +144,7 @@ class ConoVeIllustration extends StatelessWidget {
         illustrationKey.contains('apariencia') ||
         illustrationKey.contains('entorno')) {
       final cleanKey = illustrationKey.replaceAll('env_', '');
-      child = CustomPaint(
+      return CustomPaint(
         painter: EnvironmentPainter(
           envKey: cleanKey,
           isDark: isDark,
@@ -91,7 +160,7 @@ class ConoVeIllustration extends StatelessWidget {
         illustrationKey.contains('audio') ||
         illustrationKey.contains('chat')) {
       final cleanKey = illustrationKey.replaceAll('digital_', '');
-      child = CustomPaint(
+      return CustomPaint(
         painter: DigitalSignalsPainter(
           digitalKey: cleanKey,
           isDark: isDark,
@@ -120,7 +189,7 @@ class ConoVeIllustration extends StatelessWidget {
         illustrationKey.contains('steeple') ||
         illustrationKey.contains('leaning')) {
       final cleanKey = illustrationKey.replaceAll('posture_', '');
-      child = CustomPaint(
+      return CustomPaint(
         painter: BodyPosturePainter(
           postureKey: cleanKey,
           isDark: isDark,
@@ -134,7 +203,7 @@ class ConoVeIllustration extends StatelessWidget {
         illustrationKey.contains('entrevista') ||
         illustrationKey.contains('cafe')) {
       final cleanKey = illustrationKey.replaceAll('scenario_', '');
-      child = CustomPaint(
+      return CustomPaint(
         painter: ScenarioPainter(
           scenarioKey: cleanKey,
           isDark: isDark,
@@ -143,8 +212,7 @@ class ConoVeIllustration extends StatelessWidget {
         size: Size(width, height),
       );
     } else {
-      // Default to facial expression
-      child = CustomPaint(
+      return CustomPaint(
         painter: FacialExpressionPainter(
           expressionKey: illustrationKey,
           isDark: isDark,
@@ -154,19 +222,8 @@ class ConoVeIllustration extends StatelessWidget {
         size: Size(width, height),
       );
     }
-
-    return Semantics(
-      label: 'Ilustración visual de comunicación no verbal: ${illustrationKey.replaceAll('_', ' ')}',
-      image: true,
-      child: ClipRRect(
-        borderRadius: borderRadius ?? BorderRadius.circular(16),
-        child: SizedBox(
-          width: width,
-          height: height,
-          child: child,
-        ),
-      ),
-    );
   }
 }
+
+typedef GesturaIllustration = ConoVeIllustration;
 

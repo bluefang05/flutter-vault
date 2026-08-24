@@ -7,6 +7,8 @@ import '../widgets/common/app_card.dart';
 import '../widgets/common/badge_pill.dart';
 import '../widgets/common/section_header.dart';
 import '../widgets/illustrations/illustration_widget.dart';
+import '../core/services/tts_service.dart';
+import '../core/services/storage_service.dart';
 
 class ComparePair {
   final String title;
@@ -92,6 +94,13 @@ class _CompareScreenState extends State<CompareScreen> {
       _selectedIdA = pair.gestureIdA;
       _selectedIdB = pair.gestureIdB;
     });
+    if (StorageService.getAutoNarration()) {
+      final itemA = GestureDatabase.getById(pair.gestureIdA);
+      final itemB = GestureDatabase.getById(pair.gestureIdB);
+      if (itemA != null && itemB != null) {
+        TtsService.speak('Comparando ${itemA.name} con ${itemB.name}. Diferencia central: ${pair.coreDifference}');
+      }
+    }
   }
 
   @override
@@ -106,163 +115,185 @@ class _CompareScreenState extends State<CompareScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Comparador Visual A/B'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        children: [
-          const SectionHeader(
-            title: 'Pares Clásicos de Alto Contraste',
-            subtitle: 'Selecciona una pareja de gestos para comparar sus diferencias físicas',
-          ),
-          SizedBox(
-            height: 46,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: presetPairs.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, i) {
-                final pair = presetPairs[i];
-                final isSelected = _selectedIdA == pair.gestureIdA && _selectedIdB == pair.gestureIdB;
-                return ChoiceChip(
-                  label: Text(pair.title),
-                  selected: isSelected,
-                  selectedColor: AppColors.primary.withValues(alpha: 0.2),
-                  onSelected: (_) => _applyPreset(pair),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Side by Side Visual Cards
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Card A
-              Expanded(
-                child: AppCard(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    children: [
-                      BadgePill(text: 'Señal A', color: catA.primaryColor),
-                      const SizedBox(height: 8),
-                      ConoVeIllustration(
-                        illustrationKey: itemA.illustrationKey,
-                        width: 120,
-                        height: 120,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        itemA.name,
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 6),
-                      BadgePill(
-                        text: itemA.signalType.label.split(' ').first,
-                        color: itemA.signalType.color,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              // VS Badge
-              Padding(
-                padding: const EdgeInsets.only(top: 60),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Text('VS', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11)),
-                ),
-              ),
-              const SizedBox(width: 10),
-              // Card B
-              Expanded(
-                child: AppCard(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    children: [
-                      BadgePill(text: 'Señal B', color: catB.primaryColor),
-                      const SizedBox(height: 8),
-                      ConoVeIllustration(
-                        illustrationKey: itemB.illustrationKey,
-                        width: 120,
-                        height: 120,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        itemB.name,
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 6),
-                      BadgePill(
-                        text: itemB.signalType.label.split(' ').first,
-                        color: itemB.signalType.color,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Point-by-Point Differences Breakdown
-          const SectionHeader(
-            title: 'Diferencias Físicas y de Significado',
-            subtitle: 'En qué fijarse para no confundirlos',
-          ),
-          AppCard(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildComparisonRow(
-                  label: 'Pista Física Visual',
-                  textA: itemA.physiologicalDetails,
-                  textB: itemB.physiologicalDetails,
-                  colorA: catA.primaryColor,
-                  colorB: catB.primaryColor,
-                ),
-                const Divider(height: 24),
-                _buildComparisonRow(
-                  label: 'Significado Principal',
-                  textA: itemA.probableMeaning,
-                  textB: itemB.probableMeaning,
-                  colorA: catA.primaryColor,
-                  colorB: catB.primaryColor,
-                ),
-                const Divider(height: 24),
-                _buildComparisonRow(
-                  label: 'Consejo de Reacción',
-                  textA: itemA.whatToDo,
-                  textB: itemB.whatToDo,
-                  colorA: catA.primaryColor,
-                  colorB: catB.primaryColor,
-                ),
-                const Divider(height: 24),
-                _buildComparisonRow(
-                  label: 'Aplicación en Ventas',
-                  textA: itemA.salesTip,
-                  textB: itemB.salesTip,
-                  colorA: catA.primaryColor,
-                  colorB: catB.primaryColor,
-                ),
-              ],
-            ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.volume_up_rounded),
+            tooltip: 'Escuchar Comparación',
+            onPressed: () {
+              FeedbackService.lightClick();
+              TtsService.speak('Comparando ${itemA.name} contra ${itemB.name}. Diferencias clave: En ${itemA.name}, ${itemA.physiologicalDetails}. Su significado es: ${itemA.probableMeaning}. En ${itemB.name}, ${itemB.physiologicalDetails}. Su significado es: ${itemB.probableMeaning}.');
+            },
           ),
         ],
+      ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isTablet = constraints.maxWidth >= 640;
+          final illustrationSize = isTablet ? 160.0 : 120.0;
+
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                children: [
+                  const SectionHeader(
+                    title: 'Pares Clásicos de Alto Contraste',
+                    subtitle: 'Selecciona una pareja de gestos para comparar sus diferencias físicas',
+                  ),
+                  SizedBox(
+                    height: 46,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: presetPairs.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (context, i) {
+                        final pair = presetPairs[i];
+                        final isSelected = _selectedIdA == pair.gestureIdA && _selectedIdB == pair.gestureIdB;
+                        return ChoiceChip(
+                          label: Text(pair.title),
+                          selected: isSelected,
+                          selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                          onSelected: (_) => _applyPreset(pair),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Side by Side Visual Cards
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Card A
+                      Expanded(
+                        child: AppCard(
+                          padding: EdgeInsets.all(isTablet ? 18 : 12),
+                          child: Column(
+                            children: [
+                              BadgePill(text: 'Señal A', color: catA.primaryColor),
+                              const SizedBox(height: 8),
+                              ConoVeIllustration(
+                                illustrationKey: itemA.illustrationKey,
+                                width: illustrationSize,
+                                height: illustrationSize,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                itemA.name,
+                                style: TextStyle(fontWeight: FontWeight.w800, fontSize: isTablet ? 16 : 14),
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 6),
+                              BadgePill(
+                                text: itemA.signalType.label.split(' ').first,
+                                color: itemA.signalType.color,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: isTablet ? 16 : 10),
+                      // VS Badge
+                      Padding(
+                        padding: EdgeInsets.only(top: isTablet ? 80 : 60),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Text('VS', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+                        ),
+                      ),
+                      SizedBox(width: isTablet ? 16 : 10),
+                      // Card B
+                      Expanded(
+                        child: AppCard(
+                          padding: EdgeInsets.all(isTablet ? 18 : 12),
+                          child: Column(
+                            children: [
+                              BadgePill(text: 'Señal B', color: catB.primaryColor),
+                              const SizedBox(height: 8),
+                              ConoVeIllustration(
+                                illustrationKey: itemB.illustrationKey,
+                                width: illustrationSize,
+                                height: illustrationSize,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                itemB.name,
+                                style: TextStyle(fontWeight: FontWeight.w800, fontSize: isTablet ? 16 : 14),
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 6),
+                              BadgePill(
+                                text: itemB.signalType.label.split(' ').first,
+                                color: itemB.signalType.color,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Point-by-Point Differences Breakdown
+                  const SectionHeader(
+                    title: 'Diferencias Físicas y de Significado',
+                    subtitle: 'En qué fijarse para no confundirlos',
+                  ),
+                  AppCard(
+                    padding: EdgeInsets.all(isTablet ? 20 : 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildComparisonRow(
+                          label: 'Pista Física Visual',
+                          textA: itemA.physiologicalDetails,
+                          textB: itemB.physiologicalDetails,
+                          colorA: catA.primaryColor,
+                          colorB: catB.primaryColor,
+                        ),
+                        const Divider(height: 24),
+                        _buildComparisonRow(
+                          label: 'Significado Principal',
+                          textA: itemA.probableMeaning,
+                          textB: itemB.probableMeaning,
+                          colorA: catA.primaryColor,
+                          colorB: catB.primaryColor,
+                        ),
+                        const Divider(height: 24),
+                        _buildComparisonRow(
+                          label: 'Consejo de Reacción',
+                          textA: itemA.whatToDo,
+                          textB: itemB.whatToDo,
+                          colorA: catA.primaryColor,
+                          colorB: catB.primaryColor,
+                        ),
+                        const Divider(height: 24),
+                        _buildComparisonRow(
+                          label: 'Aplicación en Ventas',
+                          textA: itemA.salesTip,
+                          textB: itemB.salesTip,
+                          colorA: catA.primaryColor,
+                          colorB: catB.primaryColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

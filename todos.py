@@ -10,7 +10,7 @@ PROJECTS = [
     ("biblia 73", "Biblia Catolica 73"),
     ("brote cero", "brote_cero"),
     ("casileo", "casileo"),
-    ("conove", "conove"),
+    ("gestura", "conove"),
     ("deapoco", "deapoco"),
     ("grapa", "grapa"),
     ("haciendo", "Haciendo"),

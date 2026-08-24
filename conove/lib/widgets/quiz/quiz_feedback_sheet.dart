@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../common/app_card.dart';
 import '../../core/services/feedback_service.dart';
+import '../../core/services/tts_service.dart';
 
 class QuizFeedbackSheet extends StatelessWidget {
   final bool isCorrect;
@@ -30,7 +31,7 @@ class QuizFeedbackSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Status Header
+            // Status Header with TTS
             Row(
               children: [
                 Icon(
@@ -39,13 +40,26 @@ class QuizFeedbackSheet extends StatelessWidget {
                   size: 28,
                 ),
                 const SizedBox(width: 10),
-                Text(
-                  isCorrect ? '¡Excelente observación!' : '¡Buen intento! Aprende el detalle:',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
+                Expanded(
+                  child: Text(
+                    isCorrect ? '¡Excelente observación!' : '¡Buen intento! Aprende el detalle:',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: isCorrect ? const Color(0xFF065F46) : const Color(0xFF991B1B),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.volume_up_rounded,
                     color: isCorrect ? const Color(0xFF065F46) : const Color(0xFF991B1B),
                   ),
+                  tooltip: 'Escuchar explicación',
+                  onPressed: () {
+                    FeedbackService.lightClick();
+                    TtsService.speak('${isCorrect ? "¡Excelente observación!" : "¡Buen intento!"}. Pista anatómica: $keyVisualClue. Explicación: $explanation');
+                  },
                 ),
               ],
             ),

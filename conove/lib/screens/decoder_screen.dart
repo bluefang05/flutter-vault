@@ -78,35 +78,89 @@ class _DecoderScreenState extends State<DecoderScreen> {
           ),
           const SizedBox(height: 8),
 
-          // List
+          // List / Grid
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-              itemCount: gestures.length,
-              itemBuilder: (context, index) {
-                final item = gestures[index];
-                final isBookmarked = _bookmarkedIds.contains(item.id);
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isTablet = constraints.maxWidth >= 640;
+                final isWide = constraints.maxWidth >= 960;
+                final columns = isWide ? 3 : (isTablet ? 2 : 1);
 
-                return GestureCard(
-                  item: item,
-                  isBookmarked: isBookmarked,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => GestureDetailScreen(gestureId: item.id),
+                if (isTablet) {
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1200),
+                      child: GridView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: columns,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: isWide ? 1.55 : 1.4,
+                        ),
+                        itemCount: gestures.length,
+                        itemBuilder: (context, index) {
+                          final item = gestures[index];
+                          final isBookmarked = _bookmarkedIds.contains(item.id);
+
+                          return GestureCard(
+                            item: item,
+                            isBookmarked: isBookmarked,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => GestureDetailScreen(gestureId: item.id),
+                                ),
+                              ).then((_) {
+                                setState(() {
+                                  _bookmarkedIds = StorageService.getBookmarks();
+                                });
+                              });
+                            },
+                            onBookmarkToggle: () async {
+                              await StorageService.toggleBookmark(item.id);
+                              setState(() {
+                                _bookmarkedIds = StorageService.getBookmarks();
+                              });
+                            },
+                          );
+                        },
                       ),
-                    ).then((_) {
-                      setState(() {
-                        _bookmarkedIds = StorageService.getBookmarks();
-                      });
-                    });
-                  },
-                  onBookmarkToggle: () async {
-                    await StorageService.toggleBookmark(item.id);
-                    setState(() {
-                      _bookmarkedIds = StorageService.getBookmarks();
-                    });
+                    ),
+                  );
+                }
+
+                // Mobile 1-Column List
+                return ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                  itemCount: gestures.length,
+                  itemBuilder: (context, index) {
+                    final item = gestures[index];
+                    final isBookmarked = _bookmarkedIds.contains(item.id);
+
+                    return GestureCard(
+                      item: item,
+                      isBookmarked: isBookmarked,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => GestureDetailScreen(gestureId: item.id),
+                          ),
+                        ).then((_) {
+                          setState(() {
+                            _bookmarkedIds = StorageService.getBookmarks();
+                          });
+                        });
+                      },
+                      onBookmarkToggle: () async {
+                        await StorageService.toggleBookmark(item.id);
+                        setState(() {
+                          _bookmarkedIds = StorageService.getBookmarks();
+                        });
+                      },
+                    );
                   },
                 );
               },

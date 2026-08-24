@@ -6,6 +6,7 @@ import '../widgets/illustrations/illustration_widget.dart';
 import '../core/constants/app_colors.dart';
 import '../core/services/feedback_service.dart';
 import '../core/services/storage_service.dart';
+import '../core/services/tts_service.dart';
 
 class ScenarioRunnerScreen extends StatefulWidget {
   final Scenario scenario;
@@ -23,6 +24,32 @@ class _ScenarioRunnerScreenState extends State<ScenarioRunnerScreen> {
 
   ScenarioStep get _currentStep => widget.scenario.steps[_currentStepIndex];
 
+  @override
+  void initState() {
+    super.initState();
+    if (StorageService.getAutoNarration()) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _speakCurrentStep();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    TtsService.stop();
+    super.dispose();
+  }
+
+  void _speakCurrentStep() {
+    final step = _currentStep;
+    TtsService.speakScenarioStep(
+      narrative: step.narrative,
+      signals: step.visibleSignals,
+      choices: step.choices.map((c) => c.text).toList(),
+      tag: 'scenario_${widget.scenario.id}_$_currentStepIndex',
+    );
+  }
+
   void _onSelectChoice(ScenarioChoice choice) {
     if (_selectedChoice != null) return;
 
@@ -35,6 +62,14 @@ class _ScenarioRunnerScreenState extends State<ScenarioRunnerScreen> {
     } else {
       FeedbackService.error();
     }
+
+    if (StorageService.getAutoNarration()) {
+      TtsService.speakScenarioOutcome(
+        isBestAction: choice.isBestAction,
+        resultTitle: choice.consequenceSummary,
+        explanation: choice.analysis,
+      );
+    }
   }
 
   void _onNextStep() {
@@ -46,8 +81,15 @@ class _ScenarioRunnerScreenState extends State<ScenarioRunnerScreen> {
         _currentStepIndex = _selectedChoice!.nextStepIndex!;
         _selectedChoice = null;
       });
+
+      if (StorageService.getAutoNarration()) {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) _speakCurrentStep();
+        });
+      }
     } else {
       // Completed scenario
+      FeedbackService.complete();
       final progress = StorageService.loadProgress();
       final updated = progress.markScenarioCompleted(widget.scenario.id);
       StorageService.saveProgress(updated);
@@ -55,6 +97,10 @@ class _ScenarioRunnerScreenState extends State<ScenarioRunnerScreen> {
       setState(() {
         _isCompleted = true;
       });
+
+      if (StorageService.getAutoNarration()) {
+        TtsService.speak('¡Entrenamiento superado! Has completado exitosamente ${widget.scenario.title}. Ganaste 50 puntos de maestría.');
+      }
     }
   }
 
@@ -71,7 +117,18 @@ class _ScenarioRunnerScreenState extends State<ScenarioRunnerScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.scenario.domain),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.volume_up_rounded),
+            tooltip: 'Escuchar Situación y Opciones',
+            onPressed: () {
+              FeedbackService.lightClick();
+              _speakCurrentStep();
+            },
+          ),
+        ],
       ),
+
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
@@ -211,13 +268,33 @@ class _ScenarioRunnerScreenState extends State<ScenarioRunnerScreen> {
                     // Consequence & Analysis revealed after selection
                     if (_selectedChoice == choice) ...[
                       const Divider(height: 20),
-                      Text(
-                        choice.consequenceSummary,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: choice.isBestAction ? const Color(0xFF065F46) : const Color(0xFF991B1B),
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              choice.consequenceSummary,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: choice.isBestAction ? const Color(0xFF065F46) : const Color(0xFF991B1B),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.volume_up_rounded, size: 20),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            tooltip: 'Escuchar análisis psicológico',
+                            onPressed: () {
+                              FeedbackService.lightClick();
+                              TtsService.speakScenarioOutcome(
+                                isBestAction: choice.isBestAction,
+                                resultTitle: choice.consequenceSummary,
+                                explanation: choice.analysis,
+                              );
+                            },
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 6),
                       Text(

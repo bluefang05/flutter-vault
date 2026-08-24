@@ -97,4 +97,45 @@ class CategoryInfo {
   static CategoryInfo getInfo(CategoryType type) {
     return allCategories.firstWhere((cat) => cat.type == type);
   }
+
+  String getLocalizedTitle(String langCode) {
+    switch (type) {
+      case CategoryType.expresionesFaciales:
+        if (langCode == 'en') return 'Facial Expressions';
+        if (langCode == 'fr') return 'Expressions Faciales';
+        if (langCode == 'pt') return 'Expressões Faciais';
+        if (langCode == 'de') return 'Gesichtsausdrücke';
+        return title;
+      case CategoryType.factoresParalinguisticos:
+        if (langCode == 'en') return 'Paralinguistic Factors';
+        if (langCode == 'fr') return 'Facteurs Paralinguistiques';
+        if (langCode == 'pt') return 'Fatores Paralinguísticos';
+        if (langCode == 'de') return 'Paralinguistische Faktoren';
+        return title;
+      case CategoryType.lenguajeCorporal:
+        if (langCode == 'en') return 'Body Postures & Language';
+        if (langCode == 'fr') return 'Postures et Langage Corporel';
+        if (langCode == 'pt') return 'Postura e Linguagem Corporal';
+        if (langCode == 'de') return 'Körperhaltung & Gestik';
+        return title;
+      case CategoryType.proxemica:
+        if (langCode == 'en') return 'Proxemics & Space';
+        if (langCode == 'fr') return 'Proxémique et Espace';
+        if (langCode == 'pt') return 'Proxêmica e Espaço';
+        if (langCode == 'de') return 'Proxemik & Raum';
+        return title;
+      case CategoryType.entornoApariencia:
+        if (langCode == 'en') return 'Environment & Appearance';
+        if (langCode == 'fr') return 'Environnement et Apparence';
+        if (langCode == 'pt') return 'Ambiente e Aparência';
+        if (langCode == 'de') return 'Umgebung & Erscheinung';
+        return title;
+      case CategoryType.comunicacionDigital:
+        if (langCode == 'en') return 'Digital Signals';
+        if (langCode == 'fr') return 'Signaux Numériques';
+        if (langCode == 'pt') return 'Sinais Digitais';
+        if (langCode == 'de') return 'Digitale Signale';
+        return title;
+    }
+  }
 }

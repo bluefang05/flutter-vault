@@ -7,68 +7,101 @@ class StorageService {
   static SharedPreferences? _prefs;
 
   static Future<void> init() async {
-    _prefs ??= await SharedPreferences.getInstance();
-  }
-
-  static SharedPreferences get prefs {
-    if (_prefs == null) {
-      throw StateError('StorageService must be initialized before use.');
+    try {
+      _prefs ??= await SharedPreferences.getInstance();
+    } catch (_) {
+      // Graceful fallback if SharedPreferences fails to open
     }
-    return _prefs!;
   }
 
   // Theme & Accessibility
   static String getThemeMode() {
-    return prefs.getString(AppConstants.keyThemeMode) ?? 'system';
+    return _prefs?.getString(AppConstants.keyThemeMode) ?? 'system';
   }
 
-  static Future<bool> setThemeMode(String mode) {
-    return prefs.setString(AppConstants.keyThemeMode, mode);
+  static Future<bool> setThemeMode(String mode) async {
+    return (await _prefs?.setString(AppConstants.keyThemeMode, mode)) ?? false;
   }
 
   static bool getHighContrast() {
-    return prefs.getBool(AppConstants.keyHighContrast) ?? false;
+    return _prefs?.getBool(AppConstants.keyHighContrast) ?? false;
   }
 
-  static Future<bool> setHighContrast(bool value) {
-    return prefs.setBool(AppConstants.keyHighContrast, value);
+  static Future<bool> setHighContrast(bool value) async {
+    return (await _prefs?.setBool(AppConstants.keyHighContrast, value)) ?? false;
   }
 
   static double getTextScale() {
-    return prefs.getDouble(AppConstants.keyTextScale) ?? 1.0;
+    return _prefs?.getDouble(AppConstants.keyTextScale) ?? 1.0;
   }
 
-  static Future<bool> setTextScale(double scale) {
-    return prefs.setDouble(AppConstants.keyTextScale, scale);
+  static Future<bool> setTextScale(double scale) async {
+    return (await _prefs?.setDouble(AppConstants.keyTextScale, scale)) ?? false;
   }
 
   static bool getHapticsEnabled() {
-    return prefs.getBool(AppConstants.keyHapticsEnabled) ?? true;
+    return _prefs?.getBool(AppConstants.keyHapticsEnabled) ?? true;
   }
 
-  static Future<bool> setHapticsEnabled(bool enabled) {
-    return prefs.setBool(AppConstants.keyHapticsEnabled, enabled);
+  static Future<bool> setHapticsEnabled(bool enabled) async {
+    return (await _prefs?.setBool(AppConstants.keyHapticsEnabled, enabled)) ?? false;
+  }
+
+  static bool getSoundEffectsEnabled() {
+    return _prefs?.getBool('gestura_sound_effects') ?? true;
+  }
+
+  static Future<bool> setSoundEffectsEnabled(bool enabled) async {
+    return (await _prefs?.setBool('gestura_sound_effects', enabled)) ?? false;
   }
 
   static bool getReduceMotion() {
-    return prefs.getBool('conove_reduce_motion') ?? false;
+    return _prefs?.getBool('gestura_reduce_motion') ?? false;
   }
 
-  static Future<bool> setReduceMotion(bool value) {
-    return prefs.setBool('conove_reduce_motion', value);
+  static Future<bool> setReduceMotion(bool value) async {
+    return (await _prefs?.setBool('gestura_reduce_motion', value)) ?? false;
   }
 
   static bool getWarmFilter() {
-    return prefs.getBool('conove_warm_filter') ?? false;
+    return _prefs?.getBool('gestura_warm_filter') ?? false;
   }
 
-  static Future<bool> setWarmFilter(bool value) {
-    return prefs.setBool('conove_warm_filter', value);
+  static Future<bool> setWarmFilter(bool value) async {
+    return (await _prefs?.setBool('gestura_warm_filter', value)) ?? false;
+  }
+
+  static bool getAutoNarration() {
+    return _prefs?.getBool('gestura_auto_narration') ?? false;
+  }
+
+  static Future<bool> setAutoNarration(bool value) async {
+    return (await _prefs?.setBool('gestura_auto_narration', value)) ?? false;
+  }
+
+  static double getSpeechRate() {
+    return _prefs?.getDouble('gestura_speech_rate') ?? 0.48;
+  }
+
+  static Future<bool> setSpeechRate(double rate) async {
+    return (await _prefs?.setDouble('gestura_speech_rate', rate)) ?? false;
+  }
+
+  static String? getLanguage() {
+    return _prefs?.getString('gestura_language');
+  }
+
+  static Future<bool> setLanguage(String? langCode) async {
+    if (langCode == null) {
+      return (await _prefs?.remove('gestura_language')) ?? false;
+    }
+    return (await _prefs?.setString('gestura_language', langCode)) ?? false;
   }
 
   // Bookmarks (Gestures saved by user)
+
   static List<String> getBookmarks() {
-    return prefs.getStringList(AppConstants.keyBookmarks) ?? [];
+    return _prefs?.getStringList(AppConstants.keyBookmarks) ?? [];
   }
 
   static Future<bool> toggleBookmark(String gestureId) async {
@@ -78,7 +111,7 @@ class StorageService {
     } else {
       list.add(gestureId);
     }
-    return prefs.setStringList(AppConstants.keyBookmarks, list);
+    return (await _prefs?.setStringList(AppConstants.keyBookmarks, list)) ?? false;
   }
 
   static bool isBookmarked(String gestureId) {
@@ -87,7 +120,7 @@ class StorageService {
 
   // Progress & Stats
   static UserProgress loadProgress() {
-    final raw = prefs.getString(AppConstants.keyUserProgress);
+    final raw = _prefs?.getString(AppConstants.keyUserProgress);
     if (raw == null || raw.isEmpty) {
       return UserProgress.initial();
     }
@@ -99,13 +132,13 @@ class StorageService {
     }
   }
 
-  static Future<bool> saveProgress(UserProgress progress) {
+  static Future<bool> saveProgress(UserProgress progress) async {
     final raw = jsonEncode(progress.toJson());
-    return prefs.setString(AppConstants.keyUserProgress, raw);
+    return (await _prefs?.setString(AppConstants.keyUserProgress, raw)) ?? false;
   }
 
-  static Future<bool> clearAll() {
-    return prefs.clear();
+  static Future<bool> clearAll() async {
+    return (await _prefs?.clear()) ?? false;
   }
 }
 

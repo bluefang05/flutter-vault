@@ -93,7 +93,7 @@ class GestureCard extends StatelessWidget {
                           size: 22,
                         ),
                         onPressed: () {
-                          FeedbackService.lightClick();
+                          FeedbackService.bookmark();
                           onBookmarkToggle();
                         },
                         tooltip: isBookmarked ? 'Guardado en favoritos' : 'Guardar gesto',

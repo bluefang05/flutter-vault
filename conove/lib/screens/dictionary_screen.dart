@@ -161,7 +161,7 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
                     label: const Text('Todas las categorías'),
                     selected: isSelected,
                     onSelected: (_) {
-                      FeedbackService.lightClick();
+                      FeedbackService.tabPop();
                       setState(() => _selectedCategory = null);
                     },
                     selectedColor: AppColors.primaryContainer,
@@ -177,7 +177,7 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
                   label: Text(cat.shortTitle),
                   selected: isSelected,
                   onSelected: (_) {
-                    FeedbackService.lightClick();
+                    FeedbackService.tabPop();
                     setState(() => _selectedCategory = isSelected ? null : cat.type);
                   },
                   selectedColor: cat.containerColor,
@@ -191,8 +191,14 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
 
           // List of Gestures
           Expanded(
-            child: filteredList.isEmpty
-                ? Center(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isTablet = constraints.maxWidth >= 640;
+                final isWide = constraints.maxWidth >= 960;
+                final columns = isWide ? 3 : (isTablet ? 2 : 1);
+
+                if (filteredList.isEmpty) {
+                  return Center(
                     child: Padding(
                       padding: const EdgeInsets.all(32.0),
                       child: Column(
@@ -213,29 +219,70 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
                         ],
                       ),
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                    itemCount: filteredList.length,
-                    itemBuilder: (context, index) {
-                      final item = filteredList[index];
-                      final isBookmarked = _bookmarkedIds.contains(item.id);
+                  );
+                }
 
-                      return GestureCard(
-                        item: item,
-                        isBookmarked: isBookmarked,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => GestureDetailScreen(gestureId: item.id),
-                            ),
-                          ).then((_) => _loadBookmarks());
+                if (isTablet) {
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1200),
+                      child: GridView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: columns,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: isWide ? 1.55 : 1.4,
+                        ),
+                        itemCount: filteredList.length,
+                        itemBuilder: (context, index) {
+                          final item = filteredList[index];
+                          final isBookmarked = _bookmarkedIds.contains(item.id);
+
+                          return GestureCard(
+                            item: item,
+                            isBookmarked: isBookmarked,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => GestureDetailScreen(gestureId: item.id),
+                                ),
+                              ).then((_) => _loadBookmarks());
+                            },
+                            onBookmarkToggle: () => _toggleBookmark(item.id),
+                          );
                         },
-                        onBookmarkToggle: () => _toggleBookmark(item.id),
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+                  );
+                }
+
+                // Mobile 1-Column List
+                return ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                  itemCount: filteredList.length,
+                  itemBuilder: (context, index) {
+                    final item = filteredList[index];
+                    final isBookmarked = _bookmarkedIds.contains(item.id);
+
+                    return GestureCard(
+                      item: item,
+                      isBookmarked: isBookmarked,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => GestureDetailScreen(gestureId: item.id),
+                          ),
+                        ).then((_) => _loadBookmarks());
+                      },
+                      onBookmarkToggle: () => _toggleBookmark(item.id),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),

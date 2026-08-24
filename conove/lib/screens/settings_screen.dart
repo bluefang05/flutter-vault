@@ -6,6 +6,8 @@ import '../widgets/illustrations/conove_logo_painter.dart';
 import '../core/constants/app_colors.dart';
 import '../core/services/feedback_service.dart';
 import '../core/services/storage_service.dart';
+import '../core/services/tts_service.dart';
+import '../core/localization/app_localizations.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -55,19 +57,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+
     return ListenableBuilder(
       listenable: _settings,
       builder: (context, _) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Ajustes y Accesibilidad'),
+            title: Text('${loc.settings} & Accesibilidad'),
           ),
-          body: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            children: [
+          body: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                children: [
               // Visual Theme Section
-              const SectionHeader(
-                title: 'Tema Visual',
+              SectionHeader(
+                title: loc.appearance,
                 subtitle: 'Elige la apariencia que te resulte más cómoda',
               ),
               AppCard(
@@ -95,6 +102,90 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onSelectionChanged: (newSelection) {
                       FeedbackService.lightClick();
                       _settings.setThemeMode(newSelection.first);
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Language Selector Section
+              const SectionHeader(
+                title: 'Idioma / Language',
+                subtitle: 'Adopta el idioma del sistema o elige manualmente',
+              ),
+              AppCard(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String?>(
+                    value: _settings.languageCode,
+                    isExpanded: true,
+                    icon: const Icon(Icons.language_rounded, color: AppColors.primary),
+                    items: const [
+                      DropdownMenuItem(
+                        value: null,
+                        child: Row(
+                          children: [
+                            Text('🌐', style: TextStyle(fontSize: 18)),
+                            SizedBox(width: 10),
+                            Text('Automático (Idioma del Sistema)', style: TextStyle(fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'es',
+                        child: Row(
+                          children: [
+                            Text('🇪🇸', style: TextStyle(fontSize: 18)),
+                            SizedBox(width: 10),
+                            Text('Español (Predeterminado)', style: TextStyle(fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'en',
+                        child: Row(
+                          children: [
+                            Text('🇺🇸', style: TextStyle(fontSize: 18)),
+                            SizedBox(width: 10),
+                            Text('English', style: TextStyle(fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'fr',
+                        child: Row(
+                          children: [
+                            Text('🇫🇷', style: TextStyle(fontSize: 18)),
+                            SizedBox(width: 10),
+                            Text('Français', style: TextStyle(fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'pt',
+                        child: Row(
+                          children: [
+                            Text('🇧🇷', style: TextStyle(fontSize: 18)),
+                            SizedBox(width: 10),
+                            Text('Português', style: TextStyle(fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'de',
+                        child: Row(
+                          children: [
+                            Text('🇩🇪', style: TextStyle(fontSize: 18)),
+                            SizedBox(width: 10),
+                            Text('Deutsch', style: TextStyle(fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onChanged: (newLang) {
+                      FeedbackService.lightClick();
+                      _settings.setLanguageCode(newLang);
+                      TtsService.updateLanguage(newLang ?? 'es');
                     },
                   ),
                 ),
@@ -149,6 +240,87 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         _settings.setHapticsEnabled(val);
                       },
                     ),
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      title: const Text('Efectos de Sonido (Audio UI)'),
+                      subtitle: const Text('Sonidos suaves de acierto, error y confirmación'),
+                      value: _settings.isSoundEffectsEnabled,
+                      onChanged: (val) {
+                        _settings.setSoundEffectsEnabled(val);
+                        if (val) {
+                          FeedbackService.neutral();
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // TTS Voice & Auto-Narration Section
+              const SectionHeader(
+                title: 'Lectura por Voz & Asistencia (TTS)',
+                subtitle: 'Haz que la lectura sea 100% opcional escuchando el contenido',
+              ),
+              AppCard(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      title: const Text('Modo Auto-Narración', style: TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: const Text('Lee automáticamente en voz alta preguntas, escenarios, tarjetas y explicaciones al entrar'),
+                      value: _settings.isAutoNarration,
+                      onChanged: (val) {
+                        FeedbackService.lightClick();
+                        _settings.setAutoNarration(val);
+                        if (val) {
+                          TtsService.speak('Modo de auto-narración activado. Ahora Gestura te leerá todo el contenido automáticamente.');
+                        } else {
+                          TtsService.stop();
+                        }
+                      },
+                    ),
+                    const Divider(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Velocidad de Lectura TTS:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                              Text(
+                                '${(_settings.speechRate * 200).round()}%',
+                                style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
+                              ),
+                            ],
+                          ),
+                          Slider(
+                            value: _settings.speechRate,
+                            min: 0.35,
+                            max: 0.65,
+                            divisions: 6,
+                            label: '${(_settings.speechRate * 200).round()}%',
+                            onChanged: (val) {
+                              _settings.setSpeechRate(val);
+                              TtsService.setSpeechRate(val);
+                            },
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              onPressed: () {
+                                FeedbackService.lightClick();
+                                TtsService.speak('Esta es una prueba de velocidad de voz en Gestura.');
+                              },
+                              icon: const Icon(Icons.volume_up_rounded, size: 18),
+                              label: const Text('Probar Voz'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -200,14 +372,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(height: 24),
 
-              // About ConoVe
+              // About Gestura
               Center(
                 child: Column(
                   children: [
-                    const ConoVeLogoWidget(size: 40),
+                    const GesturaLogoWidget(size: 40),
                     const SizedBox(height: 8),
                     const Text(
-                      'ConoVe v1.0.0',
+                      'Gestura v1.0.0',
                       style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                     ),
                     const SizedBox(height: 2),
@@ -222,8 +394,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 32),
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
-  }
+  },
+);
+}
 }

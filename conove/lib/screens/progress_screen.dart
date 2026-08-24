@@ -76,14 +76,20 @@ class _ProgressScreenState extends State<ProgressScreen> {
       appBar: AppBar(
         title: const Text('Mi Progreso y Maestría'),
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        children: [
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            children: [
           // Rank Banner
           AppCard(
             color: isDark ? const Color(0xFF134E4A) : AppColors.primaryContainer,
             borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
             padding: const EdgeInsets.all(18),
+            onTap: () {
+              FeedbackService.levelUp();
+            },
             child: Row(
               children: [
                 Container(
@@ -286,9 +292,11 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 );
               }),
             ],
-          const SizedBox(height: 24),
-        ],
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

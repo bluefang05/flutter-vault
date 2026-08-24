@@ -1,5 +1,5 @@
-name: conove
-description: "Aplicación educativa para el aprendizaje y entrenamiento de comunicación no verbal (neurotípica y profesional)."
+name: gestura
+description: "Gestura - Aplicación educativa para el aprendizaje y entrenamiento de comunicación no verbal (neurotípica y profesional)."
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -14,6 +14,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.5.3
   flutter_tts: ^4.2.2
+  audioplayers: ^6.1.1
+  google_mobile_ads: ^9.1.0
 
 dev_dependencies:
   flutter_test:
@@ -23,6 +25,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/audio/
     - assets/images/branding/
     - assets/images/expressions/
     - assets/images/postures/

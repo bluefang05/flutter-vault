@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 
-class ConoVeLogoPainter extends CustomPainter {
+class GesturaLogoPainter extends CustomPainter {
   final bool isDark;
   final bool isHighContrast;
 
-  ConoVeLogoPainter({
+  GesturaLogoPainter({
     this.isDark = false,
     this.isHighContrast = false,
   });
@@ -29,64 +29,58 @@ class ConoVeLogoPainter extends CustomPainter {
           ? AppColors.hcYellow.withValues(alpha: 0.8)
           : AppColors.primary.withValues(alpha: 0.35)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.04
+      ..strokeWidth = size.width * 0.045
       ..strokeCap = StrokeCap.round;
 
     canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius * 0.82),
+      Rect.fromCircle(center: center, radius: radius * 0.78),
       -0.8,
       1.6,
       false,
       wavePaint,
     );
+
     canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius * 0.82),
-      2.34,
-      1.6,
+      Rect.fromCircle(center: center, radius: radius * 0.58),
+      -0.6,
+      1.2,
       false,
       wavePaint,
     );
 
-    // Human Head Silhouette in Calm Teal
-    final facePaint = Paint()
-      ..color = isHighContrast
-          ? AppColors.hcYellow
-          : (isDark ? AppColors.primaryLight : AppColors.primary)
-      ..style = PaintingStyle.fill;
-
-    // Stylized face profile path
-    final path = Path();
+    // Eye silhouette (Observation & Visual Reading)
+    final eyePath = Path();
     final w = size.width;
     final h = size.height;
 
-    // Left piece (Face & Mind)
-    path.moveTo(w * 0.35, h * 0.28);
-    path.cubicTo(w * 0.45, h * 0.20, w * 0.65, h * 0.22, w * 0.68, h * 0.35);
-    path.cubicTo(w * 0.70, h * 0.45, w * 0.65, h * 0.52, w * 0.62, h * 0.58);
-    // Puzzle notch on right
-    path.cubicTo(w * 0.67, h * 0.60, w * 0.72, h * 0.65, w * 0.68, h * 0.72);
-    path.cubicTo(w * 0.62, h * 0.78, w * 0.55, h * 0.75, w * 0.50, h * 0.78);
-    path.cubicTo(w * 0.40, h * 0.82, w * 0.30, h * 0.78, w * 0.28, h * 0.65);
-    path.cubicTo(w * 0.25, h * 0.50, w * 0.25, h * 0.38, w * 0.35, h * 0.28);
-    path.close();
-    canvas.drawPath(path, facePaint);
+    eyePath.moveTo(w * 0.22, h * 0.5);
+    eyePath.quadraticBezierTo(w * 0.5, h * 0.25, w * 0.78, h * 0.5);
+    eyePath.quadraticBezierTo(w * 0.5, h * 0.75, w * 0.22, h * 0.5);
+    eyePath.close();
 
-    // Complementary amber puzzle piece (Understanding NT)
-    final puzzlePaint = Paint()
+    final eyeOutline = Paint()
       ..color = isHighContrast
-          ? AppColors.hcCyan
-          : (isDark ? AppColors.accentLight : AppColors.accent)
+          ? AppColors.hcYellow
+          : (isDark ? const Color(0xFF38BDF8) : AppColors.primary)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.055
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(eyePath, eyeOutline);
+
+    // Iris circle
+    final irisPaint = Paint()
+      ..color = isHighContrast ? AppColors.hcYellow : AppColors.primary
       ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(w * 0.5, h * 0.5), w * 0.13, irisPaint);
 
-    final puzzlePath = Path();
-    puzzlePath.moveTo(w * 0.60, h * 0.42);
-    puzzlePath.cubicTo(w * 0.72, h * 0.40, w * 0.78, h * 0.48, w * 0.76, h * 0.58);
-    puzzlePath.cubicTo(w * 0.74, h * 0.68, w * 0.66, h * 0.75, w * 0.56, h * 0.70);
-    puzzlePath.cubicTo(w * 0.58, h * 0.62, w * 0.54, h * 0.52, w * 0.60, h * 0.42);
-    puzzlePath.close();
-    canvas.drawPath(puzzlePath, puzzlePaint);
+    // Pupil
+    final pupilPaint = Paint()
+      ..color = isDark ? Colors.black : const Color(0xFF0F172A)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(w * 0.5, h * 0.5), w * 0.07, pupilPaint);
 
-    // Eye dot of perception
+    // Iris catchlight
     final eyePaint = Paint()
       ..color = isHighContrast ? Colors.black : Colors.white
       ..style = PaintingStyle.fill;
@@ -94,15 +88,15 @@ class ConoVeLogoPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant ConoVeLogoPainter oldDelegate) =>
+  bool shouldRepaint(covariant GesturaLogoPainter oldDelegate) =>
       oldDelegate.isDark != isDark || oldDelegate.isHighContrast != isHighContrast;
 }
 
-class ConoVeLogoWidget extends StatelessWidget {
+class GesturaLogoWidget extends StatelessWidget {
   final double size;
   final bool showBadge;
 
-  const ConoVeLogoWidget({
+  const GesturaLogoWidget({
     super.key,
     this.size = 64,
     this.showBadge = false,
@@ -116,8 +110,11 @@ class ConoVeLogoWidget extends StatelessWidget {
       width: size,
       height: size,
       child: CustomPaint(
-        painter: ConoVeLogoPainter(isDark: isDark),
+        painter: GesturaLogoPainter(isDark: isDark),
       ),
     );
   }
 }
+
+typedef ConoVeLogoPainter = GesturaLogoPainter;
+typedef ConoVeLogoWidget = GesturaLogoWidget;

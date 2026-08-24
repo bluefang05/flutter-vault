@@ -1,5 +1,6 @@
-package com.conove.conove
+package com.gestura.app
 
 import io.flutter.embedding.android.FlutterActivity
 
 class MainActivity : FlutterActivity()
+
