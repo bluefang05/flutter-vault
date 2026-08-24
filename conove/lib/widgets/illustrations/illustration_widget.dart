@@ -24,33 +24,142 @@ class ConoVeIllustration extends StatelessWidget {
     this.borderRadius,
   });
 
-  String? _resolveAssetPath(String key) {
+  String? _resolveAssetPath(String key, bool isLarge) {
     final clean = key.toLowerCase().trim();
-    const expressions = {
-      'duchenne_smile': 'assets/images/expressions/duchenne_smile.png',
-      'sonrisa_genuina': 'assets/images/expressions/sonrisa_genuina.png',
-      'polite_smile': 'assets/images/expressions/polite_smile.png',
-      'sonrisa_falsa': 'assets/images/expressions/sonrisa_falsa.png',
-      'surprised_look': 'assets/images/expressions/surprised_look.png',
-      'sorpresa': 'assets/images/expressions/sorpresa.png',
-      'jaw_clenching': 'assets/images/expressions/jaw_clenching.png',
-      'mandibula_apretada': 'assets/images/expressions/mandibula_apretada.png',
-      'frowning_brow': 'assets/images/expressions/frowning_brow.png',
-      'ceno_fruncido': 'assets/images/expressions/frowning_brow.png',
-    };
-    const postures = {
-      'closed_posture': 'assets/images/postures/closed_posture.png',
-      'brazos_cruzados': 'assets/images/postures/brazos_cruzados.png',
-      'shrug': 'assets/images/postures/shrug.png',
-      'encogerse_hombros': 'assets/images/postures/encogerse_hombros.png',
-      'steepling_hands': 'assets/images/postures/steepling_hands.png',
-      'manos_ojiva': 'assets/images/postures/manos_ojiva.png',
-      'hand_on_chin': 'assets/images/postures/hand_on_chin.png',
-      'pensador': 'assets/images/postures/hand_on_chin.png',
+    final suffix = isLarge ? '_large.png' : '.png';
+
+    const categoryMap = {
+      // Expresiones
+      'duchenne_smile': 'expressions',
+      'sonrisa_genuina': 'expressions',
+      'polite_smile': 'expressions',
+      'sonrisa_falsa': 'expressions',
+      'frowning_brow': 'expressions',
+      'ceno_fruncido': 'expressions',
+      'narrowed_eyes': 'expressions',
+      'ojos_entrecerrados': 'expressions',
+      'winking_face': 'expressions',
+      'guino': 'expressions',
+      'smirk_contempt': 'expressions',
+      'desden': 'expressions',
+      'tight_lips': 'expressions',
+      'labios_apretados': 'expressions',
+      'surprised_look': 'expressions',
+      'sorpresa': 'expressions',
+      'averted_gaze': 'expressions',
+      'mirada_esquiva': 'expressions',
+      'closed_eyelids': 'expressions',
+      'parpados_cerrados': 'expressions',
+      'jaw_clenching': 'expressions',
+      'mandibula_apretada': 'expressions',
+      'lip_biting': 'expressions',
+      'morder_labio': 'expressions',
+      'eyebrow_flash': 'expressions',
+      'flash_cejas': 'expressions',
+      'pupil_dilation': 'expressions',
+      'pupilas_dilatadas': 'expressions',
+      'nostril_flaring': 'expressions',
+      'aleteo_nasal': 'expressions',
+      'turned_down_lips': 'expressions',
+      'tristeza': 'expressions',
+
+      // Posturas
+      'open_posture': 'postures',
+      'postura_abierta': 'postures',
+      'closed_posture': 'postures',
+      'brazos_cruzados': 'postures',
+      'leaning_forward': 'postures',
+      'inclinacion_adelante': 'postures',
+      'leaning_back': 'postures',
+      'inclinacion_atras': 'postures',
+      'hand_wringing': 'postures',
+      'frotar_manos': 'postures',
+      'finger_tapping': 'postures',
+      'tamborilear_dedos': 'postures',
+      'shrug': 'postures',
+      'encogerse_hombros': 'postures',
+      'hands_on_hips': 'postures',
+      'manos_caderas': 'postures',
+      'hands_behind_head': 'postures',
+      'manos_nuca': 'postures',
+      'steepling_hands': 'postures',
+      'manos_ojiva': 'postures',
+      'head_tilt': 'postures',
+      'cabeza_inclinada': 'postures',
+      'touching_neck': 'postures',
+      'tocarse_cuello': 'postures',
+      'hands_behind_back': 'postures',
+      'brazos_espalda': 'postures',
+      'hands_in_pockets': 'postures',
+      'manos_bolsillos': 'postures',
+      'legs_crossed': 'postures',
+      'piernas_cruzadas': 'postures',
+      'handshake_firm': 'postures',
+      'apreton_manos': 'postures',
+      'hand_on_chin': 'postures',
+      'pensador': 'postures',
+
+      // Paralingüística
+      'voice_volume_high': 'paralinguistics',
+      'volumen_alto': 'paralinguistics',
+      'voice_volume_low': 'paralinguistics',
+      'volumen_bajo': 'paralinguistics',
+      'voice_speed_fast': 'paralinguistics',
+      'velocidad_rapida': 'paralinguistics',
+      'voice_monotone': 'paralinguistics',
+      'tono_monotono': 'paralinguistics',
+      'sarcastic_inflection': 'paralinguistics',
+      'tono_sarcastico': 'paralinguistics',
+      'assertive_voice': 'paralinguistics',
+      'tono_asertivo': 'paralinguistics',
+      'silence_tense': 'paralinguistics',
+      'silencio_incomodo': 'paralinguistics',
+      'silence_reflective': 'paralinguistics',
+      'silencio_reflexivo': 'paralinguistics',
+
+      // Proxémica
+      'proxemics_intima': 'proxemics',
+      'proxemics_personal': 'proxemics',
+      'proxemics_social': 'proxemics',
+      'proxemics_publica': 'proxemics',
+      'proxemics_all': 'proxemics',
+      'proxemica': 'proxemics',
+      'espacio': 'proxemics',
+
+      // Digital
+      'digital_mayusculas': 'digital',
+      'digital_visto': 'digital',
+      'digital_ghosting': 'digital',
+      'digital_emojis': 'digital',
+      'digital_audio': 'digital',
+
+      // Entorno
+      'dress_formal': 'environment',
+      'dress_casual': 'environment',
+      'desk_barrier': 'environment',
+      'round_table': 'environment',
+      'seating_angle': 'environment',
+      'lighting_atmosphere': 'environment',
+
+      // Escenarios
+      'scenario_sales_closing': 'scenarios',
+      'scenario_job_interview': 'scenarios',
+      'scenario_friend_coffee': 'scenarios',
+      'scenario_negotiation': 'scenarios',
+
+      // Branding
+      'logo': 'branding',
+      'gestura_logo': 'branding',
+      'conove_logo': 'branding',
     };
 
-    if (expressions.containsKey(clean)) return expressions[clean];
-    if (postures.containsKey(clean)) return postures[clean];
+    if (categoryMap.containsKey(clean)) {
+      final folder = categoryMap[clean]!;
+      var fileKey = clean;
+      if (clean == 'logo' || clean == 'conove_logo') fileKey = 'gestura_logo';
+      if (clean == 'espacio') fileKey = 'proxemica';
+      return 'assets/images/$folder/$fileKey$suffix';
+    }
     return null;
   }
 
@@ -59,7 +168,8 @@ class ConoVeIllustration extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isHighContrast = Theme.of(context).scaffoldBackgroundColor == Colors.black;
 
-    final assetPath = _resolveAssetPath(illustrationKey);
+    final isLarge = width >= 160 || height >= 160;
+    final assetPath = _resolveAssetPath(illustrationKey, isLarge);
     if (assetPath != null && !isHighContrast) {
       return Semantics(
         label: 'Ilustración visual de comunicación no verbal: ${illustrationKey.replaceAll('_', ' ')}',

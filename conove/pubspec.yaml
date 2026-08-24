@@ -29,5 +29,8 @@ flutter:
     - assets/images/branding/
     - assets/images/expressions/
     - assets/images/postures/
+    - assets/images/paralinguistics/
     - assets/images/proxemics/
+    - assets/images/digital/
+    - assets/images/environment/
     - assets/images/scenarios/
