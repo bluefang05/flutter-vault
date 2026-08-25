@@ -15,6 +15,8 @@ import 'progress_screen.dart';
 import 'compare_screen.dart';
 import 'decision_tree_screen.dart';
 import 'cheat_sheet_screen.dart';
+import 'incongruence_detector_screen.dart';
+import 'buyer_temperature_screen.dart';
 import 'gesture_detail_screen.dart';
 import '../widgets/illustrations/illustration_widget.dart';
 import '../core/services/tts_service.dart';
@@ -480,6 +482,102 @@ class HomeScreen extends StatelessWidget {
                             ],
                           ),
                         ),
+
+                        // Tool 5: Detector de Incongruencias (Autismo/Social)
+                        AppCard(
+                          color: isDark ? const Color(0xFF312E81).withValues(alpha: 0.35) : const Color(0xFFEEF2FF),
+                          padding: const EdgeInsets.all(16),
+                          onTap: () {
+                            FeedbackService.lightClick();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const IncongruenceDetectorScreen()),
+                            );
+                          },
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.psychology_alt_rounded, color: Color(0xFF6366F1), size: 26),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      'Detector de Incongruencias',
+                                      style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Palabras vs señales reales.',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right_rounded, color: Color(0xFF6366F1)),
+                            ],
+                          ),
+                        ),
+
+                        // Tool 6: Termómetro de Negociación (Ventas)
+                        AppCard(
+                          color: isDark ? const Color(0xFF451A03).withValues(alpha: 0.35) : const Color(0xFFFFFBEB),
+                          padding: const EdgeInsets.all(16),
+                          onTap: () {
+                            FeedbackService.lightClick();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const BuyerTemperatureScreen()),
+                            );
+                          },
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFD97706).withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.thermostat_rounded, color: Color(0xFFD97706), size: 26),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      'Termómetro de Ventas',
+                                      style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Calibra la receptividad de compra.',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right_rounded, color: Color(0xFFD97706)),
+                            ],
+                          ),
+                        ),
                       ],
                     )
                   else ...[
@@ -535,6 +633,98 @@ class HomeScreen extends StatelessWidget {
                               );
                             },
                           ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    AppCard(
+                      color: isDark ? const Color(0xFF312E81).withValues(alpha: 0.35) : const Color(0xFFEEF2FF),
+                      padding: const EdgeInsets.all(16),
+                      onTap: () {
+                        FeedbackService.lightClick();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const IncongruenceDetectorScreen()),
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.psychology_alt_rounded, color: Color(0xFF6366F1), size: 28),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Detector de Incongruencias',
+                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '¿Dice una cosa pero su cuerpo dice otra? Descifra la verdad.',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right_rounded, color: Color(0xFF6366F1)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    AppCard(
+                      color: isDark ? const Color(0xFF451A03).withValues(alpha: 0.35) : const Color(0xFFFFFBEB),
+                      padding: const EdgeInsets.all(16),
+                      onTap: () {
+                        FeedbackService.lightClick();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const BuyerTemperatureScreen()),
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFD97706).withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.thermostat_rounded, color: Color(0xFFD97706), size: 28),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Termómetro de Negociación',
+                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Mide la temperatura del cliente y detecta el momento exacto de cierre.',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right_rounded, color: Color(0xFFD97706)),
                         ],
                       ),
                     ),

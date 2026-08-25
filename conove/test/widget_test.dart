@@ -6,6 +6,8 @@ import 'package:gestura/core/services/storage_service.dart';
 import 'package:gestura/data/gesture_database.dart';
 import 'package:gestura/data/quiz_database.dart';
 import 'package:gestura/data/scenario_database.dart';
+import 'package:gestura/data/incongruence_database.dart';
+import 'package:gestura/screens/buyer_temperature_screen.dart';
 import 'package:gestura/models/category.dart';
 import 'package:gestura/state/settings_provider.dart';
 import 'package:gestura/core/localization/app_localizations.dart';
@@ -55,11 +57,48 @@ void main() {
   });
 
   test('ScenarioDatabase contains sales and workplace simulations', () {
-    expect(ScenarioDatabase.scenarios.isNotEmpty, isTrue);
+    expect(ScenarioDatabase.scenarios.length, greaterThanOrEqualTo(5));
     final salesScenario = ScenarioDatabase.getById('scenario_sales_closing');
     expect(salesScenario, isNotNull);
     expect(salesScenario!.steps.isNotEmpty, isTrue);
     expect(salesScenario.steps.first.choices.any((c) => c.isBestAction), isTrue);
+
+    final salaryScenario = ScenarioDatabase.getById('scenario_salary_negotiation');
+    expect(salaryScenario, isNotNull);
+    expect(salaryScenario!.steps.length, equals(2));
+
+    final clientScenario = ScenarioDatabase.getById('scenario_skeptical_client');
+    expect(clientScenario, isNotNull);
+    expect(clientScenario!.domain, equals('Ventas B2B'));
+  });
+
+  test('IncongruenceDatabase contains cases for autism and sales focus', () {
+    expect(IncongruenceDatabase.items.isNotEmpty, isTrue);
+    final allItems = IncongruenceDatabase.getByAudience('all');
+    expect(allItems.length, greaterThanOrEqualTo(8));
+
+    final autismItems = IncongruenceDatabase.getByAudience('autism_focus');
+    expect(autismItems.isNotEmpty, isTrue);
+
+    final salesItems = IncongruenceDatabase.getByAudience('sales_focus');
+    expect(salesItems.isNotEmpty, isTrue);
+
+    for (final item in IncongruenceDatabase.items) {
+      expect(item.id.isNotEmpty, isTrue);
+      expect(item.spokenPhrase.isNotEmpty, isTrue);
+      expect(item.speakerRole.isNotEmpty, isTrue);
+      expect(item.physicalSignals.isNotEmpty, isTrue);
+      expect(item.realEmotion.isNotEmpty, isTrue);
+      expect(item.explanation.isNotEmpty, isTrue);
+      expect(item.recommendedAction.isNotEmpty, isTrue);
+    }
+  });
+
+  test('BuyerTemperature signals contain green, yellow, and red categories', () {
+    final greenSignals = BuyerTemperatureScreen.signals.where((s) => s.category == 'green').toList();
+    final redSignals = BuyerTemperatureScreen.signals.where((s) => s.category == 'red').toList();
+    expect(greenSignals.isNotEmpty, isTrue);
+    expect(redSignals.isNotEmpty, isTrue);
   });
 
   test('StorageService persists bookmarks and user progress correctly', () async {
