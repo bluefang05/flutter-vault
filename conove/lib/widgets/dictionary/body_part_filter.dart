@@ -25,8 +25,10 @@ class BodyPartFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SizedBox(
-      height: 38,
+      height: 40,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: parts.length,
@@ -35,21 +37,34 @@ class BodyPartFilterBar extends StatelessWidget {
           final part = parts[index];
           final isSelected = (selectedPart == part) || (selectedPart.isEmpty && part == 'Todos');
 
+          final bg = isSelected
+              ? AppColors.primary
+              : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9));
+
+          final fg = isSelected
+              ? Colors.white
+              : (isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A));
+
+          final border = isSelected
+              ? AppColors.primary
+              : (isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1));
+
           return ChoiceChip(
             label: Text(
               part,
               style: TextStyle(
                 fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? Colors.white : AppColors.textSecondaryLight,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: fg,
               ),
             ),
             selected: isSelected,
             selectedColor: AppColors.primary,
-            backgroundColor: Theme.of(context).cardTheme.color,
+            backgroundColor: bg,
             showCheckmark: false,
             side: BorderSide(
-              color: isSelected ? AppColors.primary : AppColors.lightBorder,
+              color: border,
+              width: isSelected ? 1.5 : 1.2,
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),

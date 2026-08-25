@@ -151,9 +151,26 @@ class _CompareScreenState extends State<CompareScreen> {
                         final pair = presetPairs[i];
                         final isSelected = _selectedIdA == pair.gestureIdA && _selectedIdB == pair.gestureIdB;
                         return ChoiceChip(
-                          label: Text(pair.title),
+                          label: Text(
+                            pair.title,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                              color: isSelected
+                                  ? Colors.white
+                                  : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                            ),
+                          ),
                           selected: isSelected,
-                          selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                          selectedColor: AppColors.primary,
+                          backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                          side: BorderSide(
+                            color: isSelected
+                                ? AppColors.primary
+                                : (isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
+                            width: isSelected ? 1.5 : 1.2,
+                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                           onSelected: (_) => _applyPreset(pair),
                         );
                       },

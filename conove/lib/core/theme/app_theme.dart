@@ -90,6 +90,25 @@ class AppTheme {
           ),
         ),
       ),
+      chipTheme: ChipThemeData(
+        backgroundColor: const Color(0xFFF1F5F9),
+        selectedColor: AppColors.primary,
+        disabledColor: const Color(0xFFE2E8F0),
+        secondarySelectedColor: AppColors.primary,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        labelStyle: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimaryLight,
+        ),
+        secondaryLabelStyle: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+        ),
+        side: const BorderSide(color: AppColors.lightBorder, width: 1.2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
     );
   }
 
@@ -179,6 +198,25 @@ class AppTheme {
             fontWeight: FontWeight.w600,
           ),
         ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: const Color(0xFF1E293B),
+        selectedColor: AppColors.primary,
+        disabledColor: const Color(0xFF334155),
+        secondarySelectedColor: AppColors.primary,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        labelStyle: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimaryDark,
+        ),
+        secondaryLabelStyle: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+        ),
+        side: const BorderSide(color: AppColors.darkBorder, width: 1.2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
     );
   }
