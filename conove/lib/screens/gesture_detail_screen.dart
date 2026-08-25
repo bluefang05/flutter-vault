@@ -108,71 +108,103 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
             // Card 1: Pistas Anatómicas Físicas
             AppCard(
               color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+              borderSide: BorderSide(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                width: 1.0,
+              ),
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.visibility_rounded, size: 20, color: AppColors.primary),
-                      SizedBox(width: 8),
+                      Icon(Icons.visibility_rounded, size: 20, color: isDark ? AppColors.primaryLight : AppColors.primary),
+                      const SizedBox(width: 8),
                       Text(
                         'Pistas Anatómicas Físicas (Qué ver)',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
                     item.physiologicalDetails,
-                    style: const TextStyle(fontSize: 13.5, height: 1.4),
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      height: 1.4,
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 14),
 
-            // Card 2: Significado Principal NT
+            // Card 2: Significado Principal NT (Green)
             AppCard(
-              color: isDark ? const Color(0xFF064E3B) : AppColors.successContainer,
+              color: isDark ? const Color(0xFF064E3B).withValues(alpha: 0.35) : AppColors.successContainer,
+              borderSide: BorderSide(
+                color: isDark ? const Color(0xFF059669).withValues(alpha: 0.5) : const Color(0xFFA7F3D0),
+                width: 1.2,
+              ),
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.lightbulb_rounded, size: 20, color: AppColors.success),
-                      SizedBox(width: 8),
+                      Icon(Icons.lightbulb_rounded, size: 20, color: isDark ? const Color(0xFF34D399) : AppColors.success),
+                      const SizedBox(width: 8),
                       Text(
                         'Significado Más Probable (en Neurotípicos)',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF065F46)),
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? const Color(0xFF6EE7B7) : const Color(0xFF065F46),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
                     item.probableMeaning,
-                    style: const TextStyle(fontSize: 13.5, height: 1.4, color: Color(0xFF064E3B)),
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      height: 1.4,
+                      color: isDark ? const Color(0xFFECFDF5) : const Color(0xFF064E3B),
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 14),
 
-            // Card 3: Trampas y Significados Alternativos
+            // Card 3: Trampas y Significados Alternativos (Amber)
             AppCard(
-              color: isDark ? const Color(0xFF451A03) : AppColors.warningContainer,
+              color: isDark ? const Color(0xFF78350F).withValues(alpha: 0.35) : AppColors.warningContainer,
+              borderSide: BorderSide(
+                color: isDark ? const Color(0xFFD97706).withValues(alpha: 0.5) : const Color(0xFFFDE68A),
+                width: 1.2,
+              ),
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.warning_amber_rounded, size: 20, color: AppColors.warning),
-                      SizedBox(width: 8),
+                      Icon(Icons.warning_amber_rounded, size: 20, color: isDark ? const Color(0xFFFBBF24) : AppColors.warning),
+                      const SizedBox(width: 8),
                       Text(
                         'Trampas y Otras Posibles Razones',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF92400E)),
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? const Color(0xFFFDE68A) : const Color(0xFF92400E),
+                        ),
                       ),
                     ],
                   ),
@@ -183,11 +215,21 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('• ', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF92400E))),
+                          Text(
+                            '• ',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? const Color(0xFFFBBF24) : const Color(0xFF92400E),
+                            ),
+                          ),
                           Expanded(
                             child: Text(
                               alt,
-                              style: const TextStyle(fontSize: 13, color: Color(0xFF78350F), height: 1.3),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: isDark ? const Color(0xFFFFFBEB) : const Color(0xFF78350F),
+                                height: 1.3,
+                              ),
                             ),
                           ),
                         ],
@@ -198,80 +240,117 @@ class _GestureDetailScreenState extends State<GestureDetailScreen> {
             ),
             const SizedBox(height: 14),
 
-            // Card 4: Guía por Contexto
+            // Card 4: Guía por Contexto (Indigo/Slate)
             AppCard(
+              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+              borderSide: BorderSide(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                width: 1.0,
+              ),
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.map_rounded, size: 20, color: AppColors.indigo),
-                      SizedBox(width: 8),
+                      Icon(Icons.map_rounded, size: 20, color: isDark ? const Color(0xFF818CF8) : AppColors.indigo),
+                      const SizedBox(width: 8),
                       Text(
                         'Guía según el Contexto',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
                     item.contextGuidance,
-                    style: const TextStyle(fontSize: 13.5, height: 1.4),
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      height: 1.4,
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 14),
 
-            // Card 5: ¿Qué Hacer o Responder?
+            // Card 5: ¿Qué Hacer o Responder? (Indigo)
             AppCard(
-              color: isDark ? const Color(0xFF312E81) : const Color(0xFFE0E7FF),
+              color: isDark ? const Color(0xFF312E81).withValues(alpha: 0.35) : const Color(0xFFE0E7FF),
+              borderSide: BorderSide(
+                color: isDark ? const Color(0xFF6366F1).withValues(alpha: 0.5) : const Color(0xFFC7D2FE),
+                width: 1.2,
+              ),
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.chat_rounded, size: 20, color: AppColors.indigo),
-                      SizedBox(width: 8),
+                      Icon(Icons.chat_rounded, size: 20, color: isDark ? const Color(0xFF818CF8) : AppColors.indigo),
+                      const SizedBox(width: 8),
                       Text(
                         '¿Cómo Responder o Reaccionar?',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF3730A3)),
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? const Color(0xFFC7D2FE) : const Color(0xFF3730A3),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
                     item.whatToDo,
-                    style: const TextStyle(fontSize: 13.5, height: 1.4, color: Color(0xFF312E81)),
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      height: 1.4,
+                      color: isDark ? const Color(0xFFEEF2FF) : const Color(0xFF312E81),
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 14),
 
-            // Card 6: Consejo de Ventas & Negociación
+            // Card 6: Consejo de Ventas & Negociación (Purple)
             AppCard(
-              color: isDark ? const Color(0xFF581C87) : const Color(0xFFF3E8FF),
+              color: isDark ? const Color(0xFF581C87).withValues(alpha: 0.35) : const Color(0xFFF3E8FF),
+              borderSide: BorderSide(
+                color: isDark ? const Color(0xFFA855F7).withValues(alpha: 0.5) : const Color(0xFFE9D5FF),
+                width: 1.2,
+              ),
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.business_center_rounded, size: 20, color: AppColors.purple),
-                      SizedBox(width: 8),
+                      Icon(Icons.business_center_rounded, size: 20, color: isDark ? const Color(0xFFC084FC) : AppColors.purple),
+                      const SizedBox(width: 8),
                       Text(
                         'Consejo para Ventas y Negociación',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF6B21A8)),
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? const Color(0xFFE9D5FF) : const Color(0xFF6B21A8),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
                     item.salesTip,
-                    style: const TextStyle(fontSize: 13.5, height: 1.4, color: Color(0xFF581C87)),
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      height: 1.4,
+                      color: isDark ? const Color(0xFFFAF5FF) : const Color(0xFF581C87),
+                    ),
                   ),
                 ],
               ),

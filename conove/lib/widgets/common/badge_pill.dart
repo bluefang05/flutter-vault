@@ -24,8 +24,8 @@ class BadgePill extends StatelessWidget {
     // Ensure WCAG AAA contrast by adjusting foreground brightness per theme
     final Color fg = textColor ??
         (isDark
-            ? Color.lerp(color, Colors.white, 0.45)!
-            : Color.lerp(color, Colors.black, 0.25)!);
+            ? Color.lerp(color, Colors.white, 0.75)!
+            : Color.lerp(color, Colors.black, 0.35)!);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
